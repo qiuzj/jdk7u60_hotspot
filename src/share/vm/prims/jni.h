@@ -191,9 +191,9 @@ struct JNINativeInterface_;
 
 struct JNIEnv_;
 
-#ifdef __cplusplus
+#ifdef __cplusplus // C++
 typedef JNIEnv_ JNIEnv;
-#else
+#else // C语言？
 typedef const struct JNINativeInterface_ *JNIEnv;
 #endif
 
@@ -203,14 +203,15 @@ typedef const struct JNINativeInterface_ *JNIEnv;
 
 struct JNIInvokeInterface_;
 
-struct JavaVM_;
+struct JavaVM_; // JavaVM结构体. 提供了诸如连接线程、断开线程和销毁虚拟机等重要函数.
 
-#ifdef __cplusplus
+#ifdef __cplusplus // C++
 typedef JavaVM_ JavaVM;
-#else
+#else // C语言？
 typedef const struct JNIInvokeInterface_ *JavaVM;
 #endif
 
+// JNI本地接口结构体. 提供了类、对象相关的大量方法.
 struct JNINativeInterface_ {
     void *reserved0;
     void *reserved1;
@@ -768,6 +769,7 @@ struct JNINativeInterface_ {
 };
 
 /*
+ * 在C++中使用内联函数.
  * We use inlined functions for C++ so that programmers can write:
  *
  *    env->FindClass("java/lang/String")
@@ -778,7 +780,7 @@ struct JNINativeInterface_ {
  *
  * in C.
  */
-
+// 提供了类、对象相关的大量方法.
 struct JNIEnv_ {
     const struct JNINativeInterface_ *functions;
 #ifdef __cplusplus
@@ -1887,22 +1889,24 @@ typedef struct JavaVMAttachArgs {
 
 /* End VM-specific. */
 
+// JavaVM结构体. 提供了诸如连接线程、断开线程和销毁虚拟机等重要函数.
 struct JNIInvokeInterface_ {
     void *reserved0;
     void *reserved1;
     void *reserved2;
-
+    // 销毁虚拟机
     jint (JNICALL *DestroyJavaVM)(JavaVM *vm);
-
+    // 连接线程
     jint (JNICALL *AttachCurrentThread)(JavaVM *vm, void **penv, void *args);
-
+    // 断开线程
     jint (JNICALL *DetachCurrentThread)(JavaVM *vm);
-
+    // 获取环境参数？
     jint (JNICALL *GetEnv)(JavaVM *vm, void **penv, jint version);
-
+    // 连接线程并作为后台线程？
     jint (JNICALL *AttachCurrentThreadAsDaemon)(JavaVM *vm, void **penv, void *args);
 };
 
+// JavaVM结构体. 提供了诸如连接线程、断开线程和销毁虚拟机等重要函数.
 struct JavaVM_ {
     const struct JNIInvokeInterface_ *functions;
 #ifdef __cplusplus
@@ -1934,6 +1938,7 @@ struct JavaVM_ {
 _JNI_IMPORT_OR_EXPORT_ jint JNICALL
 JNI_GetDefaultJavaVMInitArgs(void *args);
 
+// 创建Java虚拟机
 _JNI_IMPORT_OR_EXPORT_ jint JNICALL
 JNI_CreateJavaVM(JavaVM **pvm, void **penv, void *args);
 

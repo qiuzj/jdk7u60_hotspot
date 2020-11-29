@@ -37,6 +37,8 @@ typedef class klassOopDesc* wideKlassOop; // to keep SA happy and unhandled oop
                                           // detector happy.
 typedef void* OopOrNarrowOopStar;
 
+// oop代表一个实例对象。
+// 普通对象指针oop定义，统一去掉了Desc后缀，简化了名称。
 #ifndef CHECK_UNHANDLED_OOPS
 
 typedef class oopDesc*                            oop;
@@ -171,6 +173,8 @@ DEF_OOP(compiledICHolder);
 #endif // CHECK_UNHANDLED_OOPS
 
 // The klass hierarchy is separate from the oop hierarchy.
+// klass层次结构与oop层次结构是分开的。
+// Klass表示类的class信息，即Java类元数据在方法区中的表示。
 
 class Klass;
 class   instanceKlass;

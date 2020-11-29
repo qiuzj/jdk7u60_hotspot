@@ -278,7 +278,7 @@ class Chunk: CHeapObj<mtChunk> {
 };
 
 //------------------------------Arena------------------------------------------
-// Fast allocation of memory
+// Fast allocation of memory. 快速内存分配
 class Arena : public CHeapObj<mtNone|otArena> {
 protected:
   friend class ResourceMark;

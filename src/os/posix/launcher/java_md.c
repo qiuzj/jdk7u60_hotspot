@@ -736,7 +736,7 @@ GetJREPath(char *path, jint pathsize, char * arch, jboolean speculative)
 jboolean
 LoadJavaVM(const char *jvmpath, InvocationFunctions *ifn)
 {
-#ifdef GAMMA
+#ifdef GAMMA // 调试版
     /* JVM is directly linked with gamma launcher; no dlopen() */
     ifn->CreateJavaVM = JNI_CreateJavaVM;
     ifn->GetDefaultJavaVMInitArgs = JNI_GetDefaultJavaVMInitArgs;
@@ -1882,7 +1882,8 @@ jlong_format_specifier() {
 }
 
 /*
- * Block current thread and continue execution in a new thread
+ * Block current thread and continue execution in a new thread.
+ * 阻塞当前线程并在新线程中继续执行.
  */
 int
 ContinueInNewThread(int (JNICALL *continuation)(void *), jlong stack_size, void * args) {

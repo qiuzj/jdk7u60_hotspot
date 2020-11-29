@@ -221,11 +221,11 @@ struct JavaMainArgs {
 };
 
 /*
- * Entry point.
+ * Entry point. JVM实例启动入口点
  */
 int
 main(int argc, char ** argv)
-{
+{   /* 变量定义 */
     char *jarfile = 0;
     char *classname = 0;
     char *s = 0;
@@ -235,7 +235,7 @@ main(int argc, char ** argv)
     jlong start, end;
     char jrepath[MAXPATHLEN], jvmpath[MAXPATHLEN];
     char ** original_argv = argv;
-
+    // 是否启动调试模式
     if (getenv("_JAVA_LAUNCHER_DEBUG") != 0) {
         _launcher_debug = JNI_TRUE;
         printf("----_JAVA_LAUNCHER_DEBUG----\n");
@@ -244,6 +244,7 @@ main(int argc, char ** argv)
 #ifndef GAMMA
     /*
      * Make sure the specified version of the JRE is running.
+     * 确保指定版本的JRE正在运行。
      *
      * There are three things to note about the SelectVersion() routine:
      *  1) If the version running isn't correct, this routine doesn't
@@ -261,15 +262,16 @@ main(int argc, char ** argv)
      */
     SelectVersion(argc, argv, &main_class);
 #endif /* ifndef GAMMA */
-
-    /* copy original argv */
+    // 1.获取程序参数
+    /* copy original argv. 复制原始的argv参数到original_argv中 */
     {
       int i;
       original_argv = (char**)JLI_MemAlloc(sizeof(char*)*(argc+1));
       for(i = 0; i < argc+1; i++)
-        original_argv[i] = argv[i];
+        original_argv[i] = argv[i]; // argv比argc的数量多1
     }
 
+    // 2.准备执行环境
     CreateExecutionEnvironment(&argc, &argv,
                                jrepath, sizeof(jrepath),
                                jvmpath, sizeof(jvmpath),
@@ -282,6 +284,7 @@ main(int argc, char ** argv)
 
     if (_launcher_debug)
       start = CounterGet();
+    // 3.加载libjvm
     if (!LoadJavaVM(jvmpath, &ifn)) {
       exit(6);
     }
@@ -291,6 +294,7 @@ main(int argc, char ** argv)
              (long)(jint)Counter2Micros(end-start));
     }
 
+/* 4.解析参数、设置属性和环境变量 */
 #ifdef JAVA_ARGS  /* javac, jar and friends. */
     progname = "java";
 #else             /* java, oldjava, javaw and friends */
@@ -307,14 +311,14 @@ main(int argc, char ** argv)
     --argc;
 
 #ifdef JAVA_ARGS
-    /* Preprocess wrapper arguments */
+    /* Preprocess wrapper arguments. 预处理包装参数 */
     TranslateApplicationArgs(&argc, &argv);
     if (!AddApplicationOptions()) {
         exit(1);
     }
 #endif
 
-    /* Set default CLASSPATH */
+    /* Set default CLASSPATH. 设置默认的CLASSPATH */
     if ((s = getenv("CLASSPATH")) == 0) {
         s = ".";
     }
@@ -325,33 +329,36 @@ main(int argc, char ** argv)
     /*
      *  Parse command line options; if the return value of
      *  ParseArguments is false, the program should exit.
+     * 解析命令行选项; 如果ParseArguments的返回值为false，则程序应该退出。
      */
     if (!ParseArguments(&argc, &argv, &jarfile, &classname, &ret, jvmpath)) {
       exit(ret);
     }
 
-    /* Override class path if -jar flag was specified */
+    /* Override class path if -jar flag was specified. */
+    // 如果指定了-jar标志，则重写类路径
     if (jarfile != 0) {
         SetClassPath(jarfile);
     }
 
-    /* set the -Dsun.java.command pseudo property */
+    /* set the -Dsun.java.command pseudo property. 设置命令行参数：-Dsun.java.command */
     SetJavaCommandLineProp(classname, jarfile, argc, argv);
 
-    /* Set the -Dsun.java.launcher pseudo property */
+    /* Set the -Dsun.java.launcher pseudo property. 设置Java启动器参数：-Dsun.java.launcher */
     SetJavaLauncherProp();
 
-    /* set the -Dsun.java.launcher.* platform properties */
+    /* set the -Dsun.java.launcher.* platform properties. 设置Java启动器平台参数：-Dsun.java.launcher.* */
     SetJavaLauncherPlatformProps();
 
 #ifndef GAMMA
-    /* Show the splash screen if needed */
+    /* Show the splash screen if needed. 如果需要，显示启动屏幕 */
     ShowSplashScreen();
 #endif
 
     /*
      * Done with all command line processing and potential re-execs so
      * clean up the environment.
+     * 在完成所有命令行处理和潜在的重新执行之后，清理环境。
      */
     (void)UnsetEnv(ENV_ENTRY);
 #ifndef GAMMA
@@ -366,6 +373,8 @@ main(int argc, char ** argv)
      * If user doesn't specify stack size, check if VM has a preference.
      * Note that HotSpot no longer supports JNI_VERSION_1_1 but it will
      * return its default stack size through the init args structure.
+     * 如果用户没有指定堆栈大小，检查VM是否有一个首选项。
+     * 注意，HotSpot不再支持JNI_VERSION_1_1，但是它会通过初始化参数（args）结构返回默认的堆栈大小。
      */
     if (threadStackSize == 0) {
       struct JDK1_1InitArgs args1_1;
@@ -378,6 +387,7 @@ main(int argc, char ** argv)
     }
 
     { /* Create a new thread to create JVM and invoke main method */
+      // 5.创建一个新线程来创建JVM并调用main方法
       struct JavaMainArgs args;
 
       args.argc = argc;
@@ -390,6 +400,10 @@ main(int argc, char ** argv)
     }
 }
 
+/**
+ * 一般来说，主线程将伴随应用程序的整个生命周期。
+ * main()方法在最后启动新线程，将执行该方法。
+ */
 int JNICALL
 JavaMain(void * _args)
 {
@@ -398,10 +412,10 @@ JavaMain(void * _args)
     char **argv = args->argv;
     char *jarfile = args->jarfile;
     char *classname = args->classname;
-    InvocationFunctions ifn = args->ifn;
+    InvocationFunctions ifn = args->ifn; // 重要的数据结构
 
-    JavaVM *vm = 0;
-    JNIEnv *env = 0;
+    JavaVM *vm = 0; // 重要的数据结构
+    JNIEnv *env = 0; // 重要的数据结构
     jstring mainClassName;
     jclass mainClass;
     jmethodID mainID;
@@ -416,10 +430,11 @@ JavaMain(void * _args)
     char * message = "Fatal exception occurred.  Program will exit.";
     jboolean messageDest = JNI_FALSE;
 
-    /* Initialize the virtual machine */
+    /* Initialize the virtual machine. */
 
     if (_launcher_debug)
         start = CounterGet();
+    // 1.初始化虚拟机
     if (!InitializeJVM(&vm, &env, &ifn)) {
         ReportErrorMessage("Could not create the Java virtual machine.",
                            JNI_TRUE);
@@ -511,6 +526,7 @@ JavaMain(void * _args)
             ReportExceptionDescription(env);
             goto leave;
         }
+        // 2.获取应用程序主类
         mainClass = LoadClass(env, classname);
         if(mainClass == NULL) { /* exception occured */
             const char * format = "Could not find the main class: %s. Program will exit.";
@@ -550,7 +566,8 @@ JavaMain(void * _args)
       (*env)->ReleaseStringUTFChars(env, mainClassName, classname);
     }
 
-    /* Get the application's main method */
+    /* Get the application's main method. */
+    // 3.获取应用程序主方法：public static void main(String[] args)
     mainID = (*env)->GetStaticMethodID(env, mainClass, "main",
                                        "([Ljava/lang/String;)V");
     if (mainID == NULL) {
@@ -563,7 +580,7 @@ JavaMain(void * _args)
         goto leave;
     }
 
-    {    /* Make sure the main method is public */
+    {    /* Make sure the main method is public. 确保应用程序的主方法是public的 */
         jint mods;
         jmethodID mid;
         jobject obj = (*env)->ToReflectedMethod(env, mainClass,
@@ -591,7 +608,7 @@ JavaMain(void * _args)
         }
     }
 
-    /* Build argument array */
+    /* Build argument array. 构建参数数组 */
     mainArgs = NewPlatformStringArray(env, argv, argc);
     if (mainArgs == NULL) {
         ReportExceptionDescription(env);
@@ -599,6 +616,7 @@ JavaMain(void * _args)
     }
 
     /* Invoke main method. */
+    // 4.传递应用程序参数并执行主方法
     (*env)->CallStaticVoidMethod(env, mainClass, mainID, mainArgs);
 
     /*
@@ -614,6 +632,7 @@ JavaMain(void * _args)
      * exception.  An uncaught exception handler cannot change the
      * launcher's return code except by calling System.exit.
      */
+    // 5.与主线程断开连接
     if ((*vm)->DetachCurrentThread(vm) != 0) {
         message = "Could not detach main thread.";
         messageDest = JNI_TRUE;
@@ -632,6 +651,7 @@ JavaMain(void * _args)
      * the same C thread.  This allows mainThread.join() and
      * mainThread.isAlive() to work as expected.
      */
+    // 6.主方法执行完毕，等待非守护线程结束，然后创建一个名为DestroyJavaVM的Java线程执行销毁JVM任务.
     (*vm)->DestroyJavaVM(vm);
 
     if(message != NULL && !noExitErrorMessage)
@@ -1260,6 +1280,7 @@ ParseArguments(int *pargc, char ***pargv, char **pjarfile,
 /*
  * Initializes the Java Virtual Machine. Also frees options array when
  * finished.
+ * 初始化Java虚拟机。完成后释放选项数组。
  */
 static jboolean
 InitializeJVM(JavaVM **pvm, JNIEnv **penv, InvocationFunctions *ifn)
@@ -1285,7 +1306,7 @@ InitializeJVM(JavaVM **pvm, JNIEnv **penv, InvocationFunctions *ifn)
                    i, args.options[i].optionString);
     }
 
-    r = ifn->CreateJavaVM(pvm, (void **)penv, &args);
+    r = ifn->CreateJavaVM(pvm, (void **)penv, &args); // 
     JLI_MemFree(options);
     return r == JNI_OK;
 }
@@ -1393,11 +1414,12 @@ NewPlatformStringArray(JNIEnv *env, char **strv, int strc)
 
 /*
  * Loads a class, convert the '.' to '/'.
+ * 加载类，并将'.'转换为'/'
  */
 static jclass
 LoadClass(JNIEnv *env, char *name)
 {
-    char *buf = JLI_MemAlloc(strlen(name) + 1);
+    char *buf = JLI_MemAlloc(strlen(name) + 1); // 
     char *s = buf, *t = name, c;
     jclass cls;
     jlong start, end;
@@ -1409,7 +1431,7 @@ LoadClass(JNIEnv *env, char *name)
         c = *t++;
         *s++ = (c == '.') ? '/' : c;
     } while (c != '\0');
-    cls = (*env)->FindClass(env, buf);
+    cls = (*env)->FindClass(env, buf); // 
     JLI_MemFree(buf);
 
     if (_launcher_debug) {

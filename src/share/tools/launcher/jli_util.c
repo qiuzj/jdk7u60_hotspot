@@ -34,6 +34,7 @@
 #endif
 
 /*
+ * 分配内存：return malloc(size)
  * Returns a pointer to a block of at least 'size' bytes of memory.
  * Prints error message and exits if the memory could not be allocated.
  */

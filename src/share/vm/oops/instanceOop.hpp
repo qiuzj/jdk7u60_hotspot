@@ -27,12 +27,14 @@
 
 #include "oops/oop.hpp"
 
-// An instanceOop is an instance of a Java Class
+// An instanceOop is an instance of a Java Class.
 // Evaluating "new HashTable()" will create an instanceOop.
+// 一个instanceOop，是一个Java类的实例。也就是说，instanceOop与Java类实例一一对应。
+// instanceOop内部有一个指针，指向instanceKlass实例。这个指针，就是oopDesc中的_metadata。
 
 class instanceOopDesc : public oopDesc {
  public:
-  // aligned header size.
+  // aligned header size. 已对齐的对象头大小？
   static int header_size() { return sizeof(instanceOopDesc)/HeapWordSize; }
 
   // If compressed, the offset of the fields of the instance may not be aligned.

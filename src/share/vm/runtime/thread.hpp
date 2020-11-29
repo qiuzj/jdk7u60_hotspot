@@ -842,7 +842,7 @@ class JavaThread: public Thread {
   AsyncRequests _special_runtime_exit_condition; // Enum indicating pending async. request
   oop           _pending_async_exception;
 
-  // Safepoint support
+  // Safepoint support. 安全点支持
  public:                                         // Expose _thread_state for SafeFetchInt()
   volatile JavaThreadState _thread_state;
  private:
@@ -1873,7 +1873,7 @@ class Threads: AllStatic {
   static JavaThread* first()                     { return _thread_list; }
   static void threads_do(ThreadClosure* tc);
 
-  // Initializes the vm and creates the vm thread
+  // Initializes the vm and creates the vm thread. 初始化vm并创建vm线程
   static jint create_vm(JavaVMInitArgs* args, bool* canTryAgain);
   static void convert_vm_init_libraries_to_agents();
   static void create_vm_init_libraries();

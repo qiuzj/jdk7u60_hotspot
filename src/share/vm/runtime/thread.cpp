@@ -207,7 +207,7 @@ void Thread::operator delete(void* p) {
 
 // Base class for all threads: VMThread, WatcherThread, ConcurrentMarkSweepThread,
 // JavaThread
-
+// 所有线程的基类。所有线程如：VMThread, WatcherThread, ConcurrentMarkSweepThread, JavaThread
 
 Thread::Thread() {
   // stack and get_thread
@@ -216,7 +216,7 @@ Thread::Thread() {
   set_self_raw_id(0);
   set_lgrp_id(-1);
 
-  // allocated data structures
+  // allocated data structures. 分配数据结构
   set_osthread(NULL);
   set_resource_area(new (mtThread)ResourceArea());
   set_handle_area(new (mtThread) HandleArea(NULL));
@@ -3341,9 +3341,9 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
   // Initialize global data structures and create system classes in heap
   vm_init_globals();
 
-  // Attach the main thread to this os thread
+  // Attach the main thread to this os thread. 将主线程连接到这个os线程
   JavaThread* main_thread = new JavaThread();
-  main_thread->set_thread_state(_thread_in_vm);
+  main_thread->set_thread_state(_thread_in_vm); // 主线程在虚拟机中运行
   // must do this before set_active_handles and initialize_thread_local_storage
   // Note: on solaris initialize_thread_local_storage() will (indirectly)
   // change the stack size recorded here to one based on the java thread

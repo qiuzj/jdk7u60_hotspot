@@ -237,7 +237,7 @@ DEF_KLASS_HANDLE(constantPoolCacheKlass, oop_is_constantPool  )
 
 
 //------------------------------------------------------------------------------------------------------------------------
-// Thread local handle area
+// Thread local handle area. 线程本地句柄区
 class HandleArea: public Arena {
   friend class HandleMark;
   friend class NoHandleMark;

@@ -732,13 +732,15 @@ TosState as_TosState(BasicType type);
 
 // JavaThreadState keeps track of which part of the code a thread is executing in. This
 // information is needed by the safepoint code.
+// JavaThreadState跟踪线程在代码的哪一部分执行。
+// 安全点代码需要这些信息。
 //
-// There are 4 essential states:
+// There are 4 essential states（有4个重要的状态）:
 //
-//  _thread_new         : Just started, but not executed init. code yet (most likely still in OS init code)
-//  _thread_in_native   : In native code. This is a safepoint region, since all oops will be in jobject handles
-//  _thread_in_vm       : Executing in the vm
-//  _thread_in_Java     : Executing either interpreted or compiled Java code (or could be in a stub)
+//  _thread_new         : Just started, but not executed init. code yet (most likely still in OS init code). 刚刚启动，但没有执行init。代码尚未完成(很可能仍在OS init代码中)
+//  _thread_in_native   : In native code. This is a safepoint region, since all oops will be in jobject handles. 在本地代码。这是一个安全点区域，因为所有的oops都在jobject句柄中
+//  _thread_in_vm       : Executing in the vm. 在vm中执行
+//  _thread_in_Java     : Executing either interpreted or compiled Java code (or could be in a stub). 执行解释的或编译的Java代码(或在存根中)
 //
 // Each state has an associated xxxx_trans state, which is an intermediate state used when a thread is in
 // a transition from one state to another. These extra states makes it possible for the safepoint code to
@@ -746,7 +748,7 @@ TosState as_TosState(BasicType type);
 //
 // Given a state, the xxx_trans state can always be found by adding 1.
 //
-enum JavaThreadState {
+enum JavaThreadState { // Java线程状态. 用于跟踪线程处于代码执行过程中的哪个阶段/位置
   _thread_uninitialized     =  0, // should never happen (missing initialization)
   _thread_new               =  2, // just starting up, i.e., in process of being initialized
   _thread_new_trans         =  3, // corresponding transition state (not used, included for completness)

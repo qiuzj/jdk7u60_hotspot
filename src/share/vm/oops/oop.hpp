@@ -58,16 +58,20 @@ class CMSIsAliveClosure;
 class PSPromotionManager;
 class ParCompactionManager;
 
+// JVM内部一切都是对象，oopDesc是描述这些对象的共同祖先。
 class oopDesc {
   friend class VMStructs;
  private:
-  volatile markOop  _mark;
-  union _metadata {
-    wideKlassOop    _klass;
-    narrowOop       _compressed_klass;
+  // 对象头的mark word？
+  volatile markOop  _mark; // 线程状态、并发锁、GC分代信息等内部标识
+  // 类元数据，指向方法区中类的结构信息，即类的元数据信息。
+  union _metadata { // 实际上，是一个指向instanceKlass的指针
+    wideKlassOop    _klass; // 宽指针. 未压缩的oop指针
+    narrowOop       _compressed_klass; // 压缩指针. 压缩后的oop指针，节省空间.
   } _metadata;
 
   // Fast access to barrier set.  Must be initialized.
+  // 快速访问屏障设置。必须初始化。
   static BarrierSet* _bs;
 
  public:
@@ -86,6 +90,7 @@ class oopDesc {
 
   // Used only to re-initialize the mark word (e.g., of promoted
   // objects during a GC) -- requires a valid klass pointer
+  // 仅用于重新初始化mark word标记字(例如，在GC期间晋升了对象)——需要一个有效的klass指针
   void init_mark();
 
   klassOop klass() const;

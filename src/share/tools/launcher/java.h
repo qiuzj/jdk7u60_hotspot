@@ -35,6 +35,7 @@
 
 /*
  * Pointers to the needed JNI invocation API, initialized by LoadJavaVM.
+ * 指向所需的JNI调用API的指针，由LoadJavaVM初始化。
  */
 typedef jint (JNICALL *CreateJavaVM_t)(JavaVM **pvm, void **env, void *args);
 typedef jint (JNICALL *GetDefaultJavaVMInitArgs_t)(void *args);
@@ -46,6 +47,7 @@ typedef struct {
 
 /*
  * Prototypes for launcher functions in the system specific java_md.c.
+ * 在特定于系统的java_md.c中启动器功能的原型。例如：os/posix/launcher/java_md.c
  */
 
 jboolean

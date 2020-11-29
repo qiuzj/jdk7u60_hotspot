@@ -4991,7 +4991,7 @@ extern const struct JNIInvokeInterface_ jni_InvokeInterface;
 volatile jint vm_created = 0;
 // Indicate whether it is safe to recreate VM
 volatile jint safe_to_recreate_vm = 1;
-struct JavaVM_ main_vm = {&jni_InvokeInterface};
+struct JavaVM_ main_vm = {&jni_InvokeInterface}; // struct JNIInvokeInterface_类型
 
 
 #define JAVASTACKSIZE (400 * 1024)    /* Default size of a thread java stack */
@@ -5133,12 +5133,14 @@ _JNI_IMPORT_OR_EXPORT_ jint JNICALL JNI_CreateJavaVM(JavaVM **vm, void **penv, v
    */
   bool can_try_again = true;
 
+  // 初始化vm并创建vm线程
   result = Threads::create_vm((JavaVMInitArgs*) args, &can_try_again);
+  // VM创建成功
   if (result == JNI_OK) {
     JavaThread *thread = JavaThread::current();
     /* thread is thread_in_vm here */
-    *vm = (JavaVM *)(&main_vm);
-    *(JNIEnv**)penv = thread->jni_environment();
+    *vm = (JavaVM *)(&main_vm); // vm指向正确的JavaVM指针. struct JNIInvokeInterface_类型
+    *(JNIEnv**)penv = thread->jni_environment(); // penv指向正确的JNIEnv指针
 
     // Tracks the time application was running before GC
     RuntimeService::record_application_start();

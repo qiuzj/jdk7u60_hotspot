@@ -426,6 +426,7 @@ GetJVMPath(const char *jrepath, const char *jvmtype,
 
 /*
  * Load a jvm from "jvmpath" and initialize the invocation functions.
+ * 从“jvmpath”加载jvm并初始化调用函数。
  */
 jboolean
 LoadJavaVM(const char *jvmpath, InvocationFunctions *ifn)
@@ -451,7 +452,7 @@ LoadJavaVM(const char *jvmpath, InvocationFunctions *ifn)
         return JNI_FALSE;
     }
 
-    /* Now get the function addresses */
+    /* Now get the function addresses. 现在获取函数地址 */
     ifn->CreateJavaVM =
         (void *)GetProcAddress(handle, "JNI_CreateJavaVM");
     ifn->GetDefaultJavaVMInitArgs =
