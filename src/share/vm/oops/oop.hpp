@@ -219,6 +219,7 @@ class oopDesc {
   static void release_encode_store_heap_oop(volatile oop* p, oop v);
 
   static oop atomic_exchange_oop(oop exchange_value, volatile HeapWord *dest);
+  // CAS原子的比较并替换对象值
   static oop atomic_compare_exchange_oop(oop exchange_value,
                                          volatile HeapWord *dest,
                                          oop compare_value);

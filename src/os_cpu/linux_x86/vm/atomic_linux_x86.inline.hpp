@@ -45,7 +45,7 @@ inline void Atomic::store_ptr(intptr_t store_value, volatile intptr_t* dest) { *
 inline void Atomic::store_ptr(void*    store_value, volatile void*     dest) { *(void* volatile *)dest = store_value; }
 
 
-// Adding a lock prefix to an instruction on MP machine
+// Adding a lock prefix to an instruction on MP machine. 对于多处理器，给指令添加一个锁前缀
 #define LOCK_IF_MP(mp) "cmp $0, " #mp "; je 1f; lock; 1: "
 
 inline jint     Atomic::add    (jint     add_value, volatile jint*     dest) {

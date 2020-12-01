@@ -321,13 +321,13 @@ inline oop oopDesc::atomic_exchange_oop(oop exchange_value, volatile HeapWord *d
 inline oop oopDesc::atomic_compare_exchange_oop(oop exchange_value,
                                                 volatile HeapWord *dest,
                                                 oop compare_value) {
-  if (UseCompressedOops) {
-    // encode exchange and compare value from oop to T
+  if (UseCompressedOops) { // 如果启用了压缩指针
+    // encode exchange and compare value from oop to T. 将普通对象指针编码为压缩指针
     narrowOop val = encode_heap_oop(exchange_value);
     narrowOop cmp = encode_heap_oop(compare_value);
 
     narrowOop old = (narrowOop) Atomic::cmpxchg(val, (narrowOop*)dest, cmp);
-    // decode old from T to oop
+    // decode old from T to oop. 将压缩指针解码为普通对象指针
     return decode_heap_oop(old);
   } else {
     return (oop)Atomic::cmpxchg_ptr(exchange_value, (oop*)dest, compare_value);

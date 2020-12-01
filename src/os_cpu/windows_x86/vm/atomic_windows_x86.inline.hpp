@@ -64,6 +64,7 @@ inline void Atomic::store_ptr(void*    store_value, volatile void*     dest) { *
 // VC++ doesn't like the lock prefix to be on a single line
 // so we can't insert a label after the lock prefix.
 // By emitting a lock prefix, we can define a label after it.
+// 如果mp为0，表示单处理器，则跳到L0的位置。否则为多处理器，执行添加锁前缀（_emit 0xF0）
 #define LOCK_IF_MP(mp) __asm cmp mp, 0  \
                        __asm je L0      \
                        __asm _emit 0xF0 \
@@ -214,15 +215,22 @@ inline void*    Atomic::xchg_ptr(void*    exchange_value, volatile void*     des
   return (void*)xchg((jint)exchange_value, (volatile jint*)dest);
 }
 
+// Windows的cmpxchg实现
 inline jint     Atomic::cmpxchg    (jint     exchange_value, volatile jint*     dest, jint     compare_value) {
   // alternative for InterlockedCompareExchange
-  int mp = os::is_MP();
-  __asm {
-    mov edx, dest
-    mov ecx, exchange_value
-    mov eax, compare_value
+  int mp = os::is_MP(); // 是否为多处理器. 0-否，1-是
+  __asm { // 汇编脚本
+    mov edx, dest // 目标地址. dest 是指针类型，这里是把内存地址存入 edx 寄存器中
+    mov ecx, exchange_value // 新值用于替代旧值
+    mov eax, compare_value // 旧值用于比较
+    /*
+     * 检查是否运行在多处理器上，是则添加锁前缀.
+     * 如果 mp = 0，表明线程运行在单核 CPU 环境下。此时 je 会跳转到 L0 标记处，
+     * 也就是越过 _emit 0xF0 指令，直接执行 cmpxchg 指令。也就是不在下面的 cmpxchg 指令前加 lock 前缀。
+     * 0xF0 是 lock 前缀的机器码，这里没有使用 lock，而是直接使用了机器码的形式。
+     */
     LOCK_IF_MP(mp)
-    cmpxchg dword ptr [edx], ecx
+    cmpxchg dword ptr [edx], ecx // 执行CPU的cmpxchg指令
   }
 }
 

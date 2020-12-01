@@ -24,6 +24,7 @@
 
 #include "precompiled.hpp"
 #include "runtime/atomic.hpp"
+// 不同的系统平台，对应不同的实现
 #ifdef TARGET_OS_FAMILY_linux
 # include "os_linux.inline.hpp"
 #endif
@@ -36,6 +37,7 @@
 #ifdef TARGET_OS_FAMILY_bsd
 # include "os_bsd.inline.hpp"
 #endif
+// Linux实现
 #ifdef TARGET_OS_ARCH_linux_x86
 # include "atomic_linux_x86.inline.hpp"
 #endif
@@ -51,6 +53,7 @@
 #ifdef TARGET_OS_ARCH_solaris_sparc
 # include "atomic_solaris_sparc.inline.hpp"
 #endif
+// Windows实现
 #ifdef TARGET_OS_ARCH_windows_x86
 # include "atomic_windows_x86.inline.hpp"
 #endif

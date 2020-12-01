@@ -1159,22 +1159,23 @@ UNSAFE_ENTRY(jboolean, Unsafe_CompareAndSwapObject(JNIEnv *env, jobject unsafe, 
   oop e = JNIHandles::resolve(e_h);
   oop p = JNIHandles::resolve(obj);
   HeapWord* addr = (HeapWord *)index_oop_from_field_offset_long(p, offset);
-  if (UseCompressedOops) {
+  if (UseCompressedOops) { // 如果启用了压缩指针
     update_barrier_set_pre((narrowOop*)addr, e);
   } else {
     update_barrier_set_pre((oop*)addr, e);
   }
-  oop res = oopDesc::atomic_compare_exchange_oop(x, addr, e);
+  oop res = oopDesc::atomic_compare_exchange_oop(x, addr, e); // 原子比较替换
   jboolean success  = (res == e);
   if (success)
     update_barrier_set((void*)addr, x);
   return success;
 UNSAFE_END
 
+// CAS替换int类型值
 UNSAFE_ENTRY(jboolean, Unsafe_CompareAndSwapInt(JNIEnv *env, jobject unsafe, jobject obj, jlong offset, jint e, jint x))
   UnsafeWrapper("Unsafe_CompareAndSwapInt");
   oop p = JNIHandles::resolve(obj);
-  jint* addr = (jint *) index_oop_from_field_offset_long(p, offset);
+  jint* addr = (jint *) index_oop_from_field_offset_long(p, offset); // 根据字段的偏移量计算出字段的地址
   return (jint)(Atomic::cmpxchg(x, addr, e)) == e;
 UNSAFE_END
 

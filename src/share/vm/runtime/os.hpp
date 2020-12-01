@@ -191,7 +191,7 @@ class os: AllStatic {
   // Returns buffer, or NULL if it failed.
   static char* iso8601_time(char* buffer, size_t buffer_length);
 
-  // Interface for detecting multiprocessor system
+  // Interface for detecting multiprocessor system. 多处理器系统检测接口
   static inline bool is_MP() {
     assert(_processor_count > 0, "invalid processor count");
     return _processor_count > 1;
@@ -201,7 +201,7 @@ class os: AllStatic {
   static julong allocatable_physical_memory(julong size);
   static bool is_server_class_machine();
 
-  // number of CPUs
+  // number of CPUs. 处理器数量
   static int processor_count() {
     return _processor_count;
   }
