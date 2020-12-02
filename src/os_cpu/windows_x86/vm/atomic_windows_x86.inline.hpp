@@ -230,6 +230,18 @@ inline jint     Atomic::cmpxchg    (jint     exchange_value, volatile jint*     
      * 0xF0 是 lock 前缀的机器码，这里没有使用 lock，而是直接使用了机器码的形式。
      */
     LOCK_IF_MP(mp)
+    /*
+     * 比较并交换。简单解释一下下面这条指令，熟悉汇编的朋友可以略过下面的解释:
+     *   cmpxchg: 即“比较并交换”指令
+     *   dword: 全称是 double word，在 x86/x64 体系中，一个 
+     *          word = 2 byte，dword = 4 byte = 32 bit
+     *   ptr: 全称是 pointer，与前面的 dword 连起来使用，表明访问的内存单元是一个双字单元
+     *   [edx]: [...] 表示一个内存单元，edx 是寄存器，dest 指针值存放在 edx 中。
+     *          那么 [edx] 表示内存地址为 dest 的内存单元
+     *          
+     * 这一条指令的意思就是，将 eax 寄存器中的值（compare_value）与 [edx] 双字内存单元中的值
+     * 进行对比，如果相同，则将 ecx 寄存器中的值（exchange_value）存入 [edx] 内存单元中。
+     */
     cmpxchg dword ptr [edx], ecx // 执行CPU的cmpxchg指令
   }
 }
