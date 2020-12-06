@@ -949,6 +949,9 @@ void ClassLoader::create_package_info_table() {
 // process the boot classpath into a list ClassPathEntry objects.  Once
 // this list has been created, it must not change order (see class PackageInfo)
 // it can be appended to and is by jvmti and the kernel vm.
+// 初始化类装载器对libzip中的方法的访问。
+// 将引导类路径解析并处理为一个ClassPathEntry对象列表。
+// 一旦创建了这个列表，它就不能改变顺序(请参阅类PackageInfo)，它可以被附加到jvmti和内核vm中，并由其提供。
 
 void ClassLoader::initialize() {
   assert(_package_hash_table == NULL, "should have been initialized by now.");

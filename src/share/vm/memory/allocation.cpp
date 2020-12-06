@@ -171,23 +171,26 @@ bool warn_new_operator = false; // see vm_main
 
 // MT-safe pool of chunks to reduce malloc/free thrashing
 // NB: not using Mutex because pools are used before Threads are initialized
+// 这是HotSpot实现的内存池：系统全局中不会执行malloc/free操作，这样能够有效避免malloc/free的抖动影响。
+// 多线程安全的块池？避免受malloc/free抖动的影响
+// 注意: 不使用互斥，因为池是在线程初始化之前使用的
 class ChunkPool: public CHeapObj<mtInternal> {
-  Chunk*       _first;        // first cached Chunk; its first word points to next chunk
-  size_t       _num_chunks;   // number of unused chunks in pool
-  size_t       _num_used;     // number of chunks currently checked out
-  const size_t _size;         // size of each chunk (must be uniform)
+  Chunk*       _first;        // first cached Chunk; its first word points to next chunk. 第一个缓存块; 它的第一个字指向下一个块
+  size_t       _num_chunks;   // number of unused chunks in pool. 池中未使用的块的数量
+  size_t       _num_used;     // number of chunks currently checked out. 当前已使用的块的数量
+  const size_t _size;         // size of each chunk (must be uniform). 每个块的大小(必须一致)
 
-  // Our three static pools
+  // Our three static pools. 三个静态的内存池，内部使用链表实现。
   static ChunkPool* _large_pool;
   static ChunkPool* _medium_pool;
   static ChunkPool* _small_pool;
 
-  // return first element or null
+  // return first element or null. 返回第一个块，可用块数减1
   void* get_first() {
     Chunk* c = _first;
     if (_first) {
-      _first = _first->next();
-      _num_chunks--;
+      _first = _first->next(); // _first指向下一块
+      _num_chunks--; // 可用块数减1
     }
     return c;
   }
@@ -256,11 +259,11 @@ class ChunkPool: public CHeapObj<mtInternal> {
         }
       }
 
-  // Accessors to preallocated pool's
+  // Accessors to preallocated pool's. 访问预分配池
   static ChunkPool* large_pool()  { assert(_large_pool  != NULL, "must be initialized"); return _large_pool;  }
   static ChunkPool* medium_pool() { assert(_medium_pool != NULL, "must be initialized"); return _medium_pool; }
   static ChunkPool* small_pool()  { assert(_small_pool  != NULL, "must be initialized"); return _small_pool;  }
-
+  // 初始化池
   static void initialize() {
     _large_pool  = new ChunkPool(Chunk::size        + Chunk::aligned_overhead_size());
     _medium_pool = new ChunkPool(Chunk::medium_size + Chunk::aligned_overhead_size());
@@ -273,7 +276,7 @@ class ChunkPool: public CHeapObj<mtInternal> {
      _medium_pool->free_all_but(BlocksToKeep);
      _large_pool->free_all_but(BlocksToKeep);
   }
-};
+}; // end of class ChunkPool
 
 ChunkPool* ChunkPool::_large_pool  = NULL;
 ChunkPool* ChunkPool::_medium_pool = NULL;

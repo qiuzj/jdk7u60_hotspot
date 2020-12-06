@@ -100,7 +100,7 @@ class Monitor : public CHeapObj<mtInternal> {
   // The rank named "leaf" is probably historical (and should
   // be changed) -- mutexes of this rank aren't really leaf mutexes
   // at all.
-  enum lock_types {
+  enum lock_types { // 锁类型
        event,
        special,
        suspend_resume,
@@ -233,7 +233,7 @@ class Monitor : public CHeapObj<mtInternal> {
   #endif
   }
 
-};
+}; // end of class Monitor
 
 // Normally we'd expect Monitor to extend Mutex in the sense that a monitor
 // constructed from pthreads primitives might extend a mutex by adding

@@ -64,7 +64,7 @@ Symbol* SymbolTable::allocate_symbol(const u1* name, int len, bool c_heap, TRAPS
 }
 
 void SymbolTable::initialize_symbols(int arena_alloc_size) {
-  // Initialize the arena for global symbols, size passed in depends on CDS.
+  // Initialize the arena for global symbols, size passed in depends on CDS. 为全局符号初始化Arena，传入的大小取决于CDS。
   if (arena_alloc_size == 0) {
     _arena = new (mtSymbol) Arena();
   } else {

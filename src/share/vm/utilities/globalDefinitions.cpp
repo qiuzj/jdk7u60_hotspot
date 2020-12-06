@@ -53,7 +53,7 @@ void basic_fatal(const char* msg) {
   fatal(msg);
 }
 
-// Something to help porters sleep at night
+// Something to help porters sleep at night. 帮助搬运工晚上睡觉的东西
 
 void basic_types_init() {
 #ifdef ASSERT
@@ -97,11 +97,12 @@ void basic_types_init() {
   assert(char2type(0) == T_ILLEGAL, "correct illegality");
 
   {
+    // 遍历基本类型
     for (int i = T_BOOLEAN; i <= T_CONFLICT; i++) {
       BasicType vt = (BasicType)i;
       BasicType ft = type2field[vt];
       switch (vt) {
-      // the following types might plausibly show up in memory layouts:
+      // the following types might plausibly show up in memory layouts: 以下类型可能会在内存布局中出现:
       case T_BOOLEAN:
       case T_BYTE:
       case T_CHAR:
@@ -111,23 +112,23 @@ void basic_types_init() {
       case T_DOUBLE:
       case T_LONG:
       case T_OBJECT:
-      case T_ADDRESS:   // random raw pointer
-      case T_NARROWOOP: // compressed pointer
-      case T_CONFLICT:  // might as well support a bottom type
-      case T_VOID:      // padding or other unaddressed word
-        // layout type must map to itself
+      case T_ADDRESS:   // random raw pointer. 随机原始指针
+      case T_NARROWOOP: // compressed pointer. 压缩指针
+      case T_CONFLICT:  // might as well support a bottom type. 也可以支持底部类型
+      case T_VOID:      // padding or other unaddressed word. 填充或其他未编址的字
+        // layout type must map to itself. 布局类型必须映射到自身
         assert(vt == ft, "");
         break;
       default:
-        // non-layout type must map to a (different) layout type
+        // non-layout type must map to a (different) layout type. 非布局类型必须映射到一个(不同的)布局类型
         assert(vt != ft, "");
         assert(ft == type2field[ft], "");
       }
-      // every type must map to same-sized layout type:
+      // every type must map to same-sized layout type: 每种类型必须映射到相同大小的布局类型:
       assert(type2size[vt] == type2size[ft], "");
     }
   }
-  // These are assumed, e.g., when filling HeapWords with juints.
+  // These are assumed, e.g., when filling HeapWords with juints. 这些都是假设的，例如，当用juints填充堆字时。
   assert(is_power_of_2(sizeof(juint)), "juint must be power of 2");
   assert(is_power_of_2(HeapWordSize), "HeapWordSize must be power of 2");
   assert((size_t)HeapWordSize >= sizeof(juint),
@@ -174,7 +175,7 @@ void basic_types_init() {
   }
   _type2aelembytes[T_OBJECT] = heapOopSize;
   _type2aelembytes[T_ARRAY]  = heapOopSize;
-}
+} // end of basic_types_init()
 
 
 // Map BasicType to signature character
@@ -210,9 +211,9 @@ BasicType name2type(const char* name) {
 }
 
 
-// Map BasicType to size in words
+// Map BasicType to size in words. 基本类型与占用字大小映射关系
 int type2size[T_CONFLICT+1]={ -1, 0, 0, 0, 1, 1, 1, 2, 1, 1, 1, 2, 1, 1, 0, 1, 1, -1};
-
+// 下标为BasicType的枚举值，值为对应的BasicType
 BasicType type2field[T_CONFLICT+1] = {
   (BasicType)0,            // 0,
   (BasicType)0,            // 1,

@@ -146,7 +146,7 @@ class PerfMemory : AllStatic {
     static void attach(const char* user, int vmid, PerfMemoryMode mode,
                        char** addrp, size_t* size, TRAPS);
     static void detach(char* addr, size_t bytes, TRAPS);
-
+    // 初始化性能统计数据区
     static void initialize();
     static void destroy();
     static void set_accessible(bool value) {

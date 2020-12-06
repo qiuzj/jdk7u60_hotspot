@@ -591,7 +591,7 @@ void CodeCache::initialize() {
   // default page size.
   CodeCacheExpansionSize = round_to(CodeCacheExpansionSize, os::vm_page_size());
   InitialCodeCacheSize = round_to(InitialCodeCacheSize, os::vm_page_size());
-  ReservedCodeCacheSize = round_to(ReservedCodeCacheSize, os::vm_page_size());
+  ReservedCodeCacheSize = round_to(ReservedCodeCacheSize, os::vm_page_size()); // 
   if (!_heap->reserve(ReservedCodeCacheSize, InitialCodeCacheSize, CodeCacheSegmentSize)) {
     vm_exit_during_initialization("Could not reserve enough space for code cache");
   }
@@ -606,7 +606,7 @@ void CodeCache::initialize() {
   // This is used on Windows 64 bit platforms to register
   // Structured Exception Handlers for our generated code.
   os::register_code_area(_heap->low_boundary(), _heap->high_boundary());
-}
+} // CodeCache::initialize()
 
 
 void codeCache_init() {

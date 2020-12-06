@@ -492,6 +492,7 @@ void basic_types_init(); // cannot define here; uses assert
 
 
 // NOTE: replicated in SA in vm/agent/sun/jvm/hotspot/runtime/BasicType.java
+// 基本类型枚举值定义. 注意: 在SA中复制了vm/agent/sun/jvm/hotspot/runtime/BasicType.java
 enum BasicType {
   T_BOOLEAN  =  4,
   T_CHAR     =  5,
@@ -506,7 +507,7 @@ enum BasicType {
   T_VOID     = 14,
   T_ADDRESS  = 15,
   T_NARROWOOP= 16,
-  T_CONFLICT = 17, // for stack value type with conflicting contents
+  T_CONFLICT = 17, // for stack value type with conflicting contents. 用于内容冲突的堆栈值类型
   T_ILLEGAL  = 99
 };
 

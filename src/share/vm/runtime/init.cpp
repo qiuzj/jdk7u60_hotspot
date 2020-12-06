@@ -79,35 +79,35 @@ void stubRoutines_init2(); // note: StubRoutines need 2-phase init
 void perfMemory_exit();
 void ostream_exit();
 
+// 初始化全局数据结构
 void vm_init_globals() {
   check_ThreadShadow();
-  basic_types_init();
-  eventlog_init();
-  mutex_init();
-  chunkpool_init();
-  perfMemory_init();
+  basic_types_init(); // 初始化Java基本类型系统
+  eventlog_init(); // 分配全局事件缓冲区，初始化事件队列
+  mutex_init(); // 初始化全局锁
+  chunkpool_init(); // 初始化ChunkPool
+  perfMemory_init(); // 初始化JVM性能统计数据区（Perf Data）
 }
 
-
+// 初始化全局模块
 jint init_globals() {
   HandleMark hm;
-  management_init();
-  bytecodes_init();
+  management_init(); // JMX:Management模块 初始化. 各种运行时、线程、类加载等的性能监控和管理服务
+  bytecodes_init(); // 初始化字节码指令表
   classLoader_init();
-  codeCache_init();
+  codeCache_init(); // 代码调整缓存初始化
   VM_Version_init();
   os_init_globals();
-  stubRoutines_init1();
-  jint status = universe_init();  // dependent on codeCache_init and
-                                  // stubRoutines_init1
+  stubRoutines_init1(); // StubRoutines初始化第一个阶段
+  jint status = universe_init();  // dependent on codeCache_init and stubRoutines_init1. 堆初始化. 设置GC策略，压缩指针设置，TLAB初始化，符号表初始化等
   if (status != JNI_OK)
     return status;
 
-  interpreter_init();  // before any methods loaded
+  interpreter_init();  // before any methods loaded. 解释器初始化
   invocationCounter_init();  // before any methods loaded
-  marksweep_init();
-  accessFlags_init();
-  templateTable_init();
+  marksweep_init(); // 初始化标记清理
+  accessFlags_init(); // 初始化访问标志
+  templateTable_init(); // 初始化模板表
   InterfaceSupport_init();
   SharedRuntime::generate_stubs();
   universe2_init();  // dependent on codeCache_init and stubRoutines_init1
@@ -126,7 +126,7 @@ jint init_globals() {
     return JNI_ERR;
   }
   javaClasses_init();   // must happen after vtable initialization
-  stubRoutines_init2(); // note: StubRoutines need 2-phase init
+  stubRoutines_init2(); // note: StubRoutines need 2-phase init. StubRoutines初始化第二个阶段
 
   // All the flags that get adjusted by VM_Version_init and os::init_2
   // have been set so dump the flags now.
@@ -135,7 +135,7 @@ jint init_globals() {
   }
 
   return JNI_OK;
-}
+} // end of init_globals()
 
 
 void exit_globals() {

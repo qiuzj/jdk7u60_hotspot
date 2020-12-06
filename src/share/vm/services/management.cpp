@@ -72,11 +72,12 @@ klassOop Management::_gcInfo_klass = NULL;
 jmmOptionalSupport Management::_optional_support = {0};
 TimeStamp Management::_stamp;
 
+// JMX:Management模块 初始化. 各种运行时、线程、类加载等的性能监控和管理服务
 void management_init() {
-  Management::init();
-  ThreadService::init();
-  RuntimeService::init();
-  ClassLoadingService::init();
+  Management::init(); // Management模块初始化
+  ThreadService::init(); // RuntimeService模块初始化
+  RuntimeService::init(); // ThreadService模块初始化
+  ClassLoadingService::init(); // ClassLoadingService模块初始化
 }
 
 void Management::init() {
@@ -121,7 +122,7 @@ void Management::init() {
   DCmdRegistrant::register_dcmds();
   DCmdRegistrant::register_dcmds_ext();
   DCmdFactory::register_DCmdFactory(new DCmdFactoryImpl<NMTDCmd>(true, false));
-}
+} // end of Management::init()
 
 void Management::initialize(TRAPS) {
   // Start the service thread

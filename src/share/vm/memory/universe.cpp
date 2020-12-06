@@ -757,10 +757,10 @@ jint universe_init() {
   guarantee(sizeof(oop) % sizeof(HeapWord) == 0,
             "oop size is not not a multiple of HeapWord size");
   TraceTime timer("Genesis", TraceStartupTime);
-  GC_locker::lock();  // do not allow gc during bootstrapping
+  GC_locker::lock();  // do not allow gc during bootstrapping. 在引导期间不允许gc
   JavaClasses::compute_hard_coded_offsets();
 
-  // Get map info from shared archive file.
+  // Get map info from shared archive file. 从共享的存档文件中获取映射信息。
   if (DumpSharedSpaces)
     UseSharedSpaces = false;
 
@@ -780,7 +780,7 @@ jint universe_init() {
              "archive file not closed or shared spaces not disabled.");
     }
   }
-
+  // 堆初始化
   jint status = Universe::initialize_heap();
   if (status != JNI_OK) {
     return status;
@@ -805,13 +805,13 @@ jint universe_init() {
     mapinfo->close();
 
   } else {
-    SymbolTable::create_table();
-    StringTable::create_table();
-    ClassLoader::create_package_info_table();
+    SymbolTable::create_table(); // 创建符号表
+    StringTable::create_table(); // 创建String表
+    ClassLoader::create_package_info_table(); // 创建包信息表
   }
 
   return JNI_OK;
-}
+} // end of universe_init()
 
 // Choose the heap base address and oop encoding mode
 // when compressed oops are used:
@@ -893,16 +893,17 @@ char* Universe::preferred_heap_base(size_t heap_size, size_t alignment, NARROW_O
   return (char*)base; // also return NULL (don't care) for 32-bit VM
 }
 
+// 堆初始化. 设置GC策略，压缩指针设置，TLAB初始化
 jint Universe::initialize_heap() {
 
-  if (UseParallelGC) {
+  if (UseParallelGC) { // UseParallelGC
 #ifndef SERIALGC
     Universe::_collectedHeap = new ParallelScavengeHeap();
 #else  // SERIALGC
     fatal("UseParallelGC not supported in java kernel vm.");
 #endif // SERIALGC
 
-  } else if (UseG1GC) {
+  } else if (UseG1GC) { // UseG1GC
 #ifndef SERIALGC
     G1CollectorPolicy* g1p = new G1CollectorPolicy();
     G1CollectedHeap* g1h = new G1CollectedHeap(g1p);
@@ -916,9 +917,9 @@ jint Universe::initialize_heap() {
 
     if (UseSerialGC) {
       gc_policy = new MarkSweepPolicy();
-    } else if (UseConcMarkSweepGC) {
+    } else if (UseConcMarkSweepGC) { // UseConcMarkSweepGC
 #ifndef SERIALGC
-      if (UseAdaptiveSizePolicy) {
+      if (UseAdaptiveSizePolicy) { // 自适应大小策略
         gc_policy = new ASConcurrentMarkSweepPolicy();
       } else {
         gc_policy = new ConcurrentMarkSweepPolicy();
@@ -939,7 +940,7 @@ jint Universe::initialize_heap() {
   }
 
 #ifdef _LP64
-  if (UseCompressedOops) {
+  if (UseCompressedOops) { // 启用压缩指针
     // Subtract a page because something can get allocated at heap base.
     // This also makes implicit null checking work, because the
     // memory+1 page below heap_base needs to cause a signal.
@@ -997,13 +998,13 @@ jint Universe::initialize_heap() {
   // We will never reach the CATCH below since Exceptions::_throw will cause
   // the VM to exit if an exception is thrown during initialization
 
-  if (UseTLAB) {
+  if (UseTLAB) { // 启用TLAB
     assert(Universe::heap()->supports_tlab_allocation(),
            "Should support thread-local allocation buffers");
     ThreadLocalAllocBuffer::startup_initialization();
   }
   return JNI_OK;
-}
+} // end of Universe::initialize_heap()
 
 // It's the caller's repsonsibility to ensure glitch-freedom
 // (if required).

@@ -192,15 +192,19 @@ class JvmtiExport : public AllStatic {
 
 
   // let JVMTI know that the JVM_OnLoad code is running
+  // 让JVMTI知道JVM_OnLoad代码正在运行
   static void enter_onload_phase();
 
   // let JVMTI know that the VM isn't up yet (and JVM_OnLoad code isn't running)
+  // 让JVMTI知道VM还没有启动(并且JVM_OnLoad代码没有运行)
   static void enter_primordial_phase();
 
   // let JVMTI know that the VM isn't up yet but JNI is live
+  // 让JVMTI知道VM还没有启动，但JNI是活动的
   static void enter_start_phase();
 
   // let JVMTI know that the VM is fully up and running now
+  // 让JVMTI知道VM现在已经完全启动并运行了
   static void enter_live_phase();
 
   // ------ can_* conditions (below) are set at OnLoad and never changed ------------

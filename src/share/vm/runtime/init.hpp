@@ -35,8 +35,8 @@
 // use "Foo* foo;", create a function init_foo() in foo.c, and add a call
 // to init_foo in init.cpp.
 
-jint init_globals();     // call constructors at startup (main Java thread)
-void vm_init_globals();  // call constructors at startup (VM thread)
+jint init_globals();     // call constructors at startup (main Java thread). 初始化全局模块
+void vm_init_globals();  // call constructors at startup (VM thread). 初始化全局数据结构
 void exit_globals();     // call destructors before exit
 
 bool is_init_completed();     // returns true when bootstrapping has completed

@@ -145,7 +145,7 @@ Mutex*   JfrThreadGroups_lock         = NULL;
 #endif
 
 #define MAX_NUM_MUTEX 128
-static Monitor * _mutex_array[MAX_NUM_MUTEX];
+static Monitor * _mutex_array[MAX_NUM_MUTEX]; // 互斥锁数组
 static int _num_mutex;
 
 #ifdef ASSERT
@@ -171,6 +171,7 @@ void assert_lock_strong(const Monitor * lock) {
 }
 #endif
 
+// new一个type类型（Monitor或Mutex）的对象，名称为#var。然后保存到_mutex_array中
 #define def(var, type, pri, vm_block) {                           \
   var = new type(Mutex::pri, #var, vm_block);                     \
   assert(_num_mutex < MAX_NUM_MUTEX,                              \
@@ -178,6 +179,7 @@ void assert_lock_strong(const Monitor * lock) {
   _mutex_array[_num_mutex++] = var;                               \
 }
 
+// 初始化全局锁
 void mutex_init() {
   def(tty_lock                     , Mutex  , event,       true ); // allow to lock in VM
 
@@ -187,9 +189,9 @@ void mutex_init() {
     def(iCMS_lock                  , Monitor, special,     true ); // CMS incremental mode start/stop notification
   }
   if (UseConcMarkSweepGC || UseG1GC) {
-    def(FullGCCount_lock           , Monitor, leaf,        true ); // in support of ExplicitGCInvokesConcurrent
+    def(FullGCCount_lock           , Monitor, leaf,        true ); // in support of ExplicitGCInvokesConcurrent. 用于支持ExplicitGCInvokesConcurrent
   }
-  if (UseG1GC) {
+  if (UseG1GC) { // 使用G1 GC
     def(CMark_lock                 , Monitor, nonleaf,     true ); // coordinate concurrent mark thread
     def(CMRegionStack_lock         , Mutex,   leaf,        true );
     def(SATB_Q_FL_lock             , Mutex  , special,     true );
@@ -292,7 +294,7 @@ void mutex_init() {
   def(JfrStacktrace_lock           , Mutex,   special,     true );
 #endif
 
-}
+} // end of mutex_init()
 
 GCMutexLocker::GCMutexLocker(Monitor * mutex) {
   if (SafepointSynchronize::is_at_safepoint()) {

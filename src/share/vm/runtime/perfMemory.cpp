@@ -95,7 +95,7 @@ void PerfMemory::initialize() {
                capacity);
   }
 
-  // allocate PerfData memory region
+  // allocate PerfData memory region. 分配PerfData内存区
   create_memory_region(capacity);
 
   if (_start == NULL) {

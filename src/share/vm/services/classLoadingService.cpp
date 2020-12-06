@@ -78,13 +78,13 @@ HS_DTRACE_PROBE_DECL4(hotspot, class__unloaded, char*, int, oop, bool);
 
 #endif
 
-// counters for classes loaded from class files
+// counters for classes loaded from class files. 从类文件加载的类的计数器
 PerfCounter*    ClassLoadingService::_classes_loaded_count = NULL;
 PerfCounter*    ClassLoadingService::_classes_unloaded_count = NULL;
 PerfCounter*    ClassLoadingService::_classbytes_loaded = NULL;
 PerfCounter*    ClassLoadingService::_classbytes_unloaded = NULL;
 
-// counters for classes loaded from shared archive
+// counters for classes loaded from shared archive. 从共享归档加载的类的计数器
 PerfCounter*    ClassLoadingService::_shared_classes_loaded_count = NULL;
 PerfCounter*    ClassLoadingService::_shared_classes_unloaded_count = NULL;
 PerfCounter*    ClassLoadingService::_shared_classbytes_loaded = NULL;

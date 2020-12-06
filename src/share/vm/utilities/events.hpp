@@ -143,7 +143,7 @@ class StringLogMessage : public FormatBuffer<256> {
   }
 };
 
-// A simple ring buffer of fixed size text messages.
+// A simple ring buffer of fixed size text messages. 一个简单的环形缓冲区的固定大小的文本消息。
 class StringEventLog : public EventLogBase<StringLogMessage> {
  public:
   StringEventLog(const char* name, int count = LogEventsBufferEntries) : EventLogBase<StringLogMessage>(name, count) {}
@@ -166,7 +166,7 @@ class StringEventLog : public EventLogBase<StringLogMessage> {
     va_end(ap);
   }
 
-};
+}; // end of class StringEventLog
 
 
 
@@ -200,7 +200,7 @@ class Events : AllStatic {
 
   static void log_deopt_message(Thread* thread, const char* format, ...);
 
-  // Register default loggers
+  // Register default loggers. 注册默认的loggers。分配全局事件缓冲区，初始化事件队列。
   static void init();
 };
 

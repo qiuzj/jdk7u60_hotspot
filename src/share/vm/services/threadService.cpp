@@ -68,26 +68,26 @@ void ThreadService::init() {
 
   _total_threads_count =
                 PerfDataManager::create_counter(JAVA_THREADS, "started",
-                                                PerfData::U_Events, CHECK);
+                                                PerfData::U_Events, CHECK); // 总线程数
 
   _live_threads_count =
                 PerfDataManager::create_variable(JAVA_THREADS, "live",
-                                                 PerfData::U_None, CHECK);
+                                                 PerfData::U_None, CHECK); // 活动的线程数
 
   _peak_threads_count =
                 PerfDataManager::create_variable(JAVA_THREADS, "livePeak",
-                                                 PerfData::U_None, CHECK);
+                                                 PerfData::U_None, CHECK); // 峰值线程数
 
   _daemon_threads_count =
                 PerfDataManager::create_variable(JAVA_THREADS, "daemon",
-                                                 PerfData::U_None, CHECK);
+                                                 PerfData::U_None, CHECK); // 后台线程数
 
   if (os::is_thread_cpu_time_supported()) {
     _thread_cpu_time_enabled = true;
   }
 
   _thread_allocated_memory_enabled = true; // Always on, so enable it
-}
+} // end of ThreadService::init()
 
 void ThreadService::reset_peak_thread_count() {
   // Acquire the lock to update the peak thread count

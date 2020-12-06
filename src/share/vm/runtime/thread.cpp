@@ -3315,7 +3315,7 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
   jint os_init_2_result = os::init_2();
   if (os_init_2_result != JNI_OK) return os_init_2_result;
 
-  // intialize TLS
+  // intialize TLS. 初始化线程本地存储
   ThreadLocalStorage::init();
 
   // Bootstrap native memory tracking, so it can start recording memory
@@ -3381,7 +3381,7 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
   // bootstrapping的第二个阶段，VM进入多线程模式
   MemTracker::bootstrap_multi_thread();
 
-  // Initialize global modules
+  // Initialize global modules. 初始化全局模块
   jint status = init_globals();
   if (status != JNI_OK) {
     delete main_thread;
@@ -3766,7 +3766,7 @@ static OnLoadEntry_t lookup_jvm_on_load(AgentLibrary* agent) {
   return lookup_on_load(agent, on_load_symbols, sizeof(on_load_symbols) / sizeof(char*));
 }
 
-// Find the Agent_OnLoad entry point
+// Find the Agent_OnLoad entry point. 查找Agent_OnLoad入口点
 static OnLoadEntry_t lookup_agent_on_load(AgentLibrary* agent) {
   const char *on_load_symbols[] = AGENT_ONLOAD_SYMBOLS;
   return lookup_on_load(agent, on_load_symbols, sizeof(on_load_symbols) / sizeof(char*));
@@ -3800,18 +3800,20 @@ void Threads::convert_vm_init_libraries_to_agents() {
 }
 
 // Create agents for -agentlib:  -agentpath:  and converted -Xrun
-// Invokes Agent_OnLoad
-// Called very early -- before JavaThreads exist
+// 为 "-agentlib:  -agentpath: 和 已转换的-Xrun "创建代理。
+// Invokes Agent_OnLoad. 调用代理库的Agent_OnLoad()方法。
+// Called very early -- before JavaThreads exist. 加载库操作需要在Java线程创建前完成。
 void Threads::create_vm_init_agents() {
   extern struct JavaVM_ main_vm;
   AgentLibrary* agent;
 
-  JvmtiExport::enter_onload_phase();
+  JvmtiExport::enter_onload_phase(); // 让JVMTI知道JVM_OnLoad代码正在运行
+  // 遍历-agentlib -agentpath加载的自定义代理库？
   for (agent = Arguments::agents(); agent != NULL; agent = agent->next()) {
-    OnLoadEntry_t  on_load_entry = lookup_agent_on_load(agent);
+    OnLoadEntry_t  on_load_entry = lookup_agent_on_load(agent); // 查找Agent_OnLoad入口点
 
     if (on_load_entry != NULL) {
-      // Invoke the Agent_OnLoad function
+      // Invoke the Agent_OnLoad function. 调用Agent_OnLoad()函数
       jint err = (*on_load_entry)(&main_vm, agent->options(), NULL);
       if (err != JNI_OK) {
         vm_exit_during_initialization("agent library failed to init", agent->name());
@@ -3820,7 +3822,7 @@ void Threads::create_vm_init_agents() {
       vm_exit_during_initialization("Could not find Agent_OnLoad function in the agent library", agent->name());
     }
   }
-  JvmtiExport::enter_primordial_phase();
+  JvmtiExport::enter_primordial_phase(); // 让JVMTI知道VM还没有启动(并且JVM_OnLoad代码没有运行)
 }
 
 extern "C" {
