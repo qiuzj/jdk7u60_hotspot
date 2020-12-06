@@ -430,7 +430,7 @@ JavaMain(void * _args)
     char * message = "Fatal exception occurred.  Program will exit.";
     jboolean messageDest = JNI_FALSE;
 
-    /* Initialize the virtual machine. */
+    /* Initialize the virtual machine. 初始化虚拟机 */
 
     if (_launcher_debug)
         start = CounterGet();
@@ -1287,8 +1287,8 @@ InitializeJVM(JavaVM **pvm, JNIEnv **penv, InvocationFunctions *ifn)
 {
     JavaVMInitArgs args;
     jint r;
-
-    memset(&args, 0, sizeof(args));
+    // 对args参数初始化填零. https://www.cplusplus.com/reference/cstring/memset/
+    memset(&args, 0, sizeof(args)); // void * memset ( void * ptr, int value, size_t num );
     args.version  = JNI_VERSION_1_2;
     args.nOptions = numOptions;
     args.options  = options;

@@ -704,8 +704,8 @@ void JDK_Version::initialize() {
   } else {
     (*func)(&info, sizeof(info));
 
-    int major = JDK_VERSION_MAJOR(info.jdk_version);
-    int minor = JDK_VERSION_MINOR(info.jdk_version);
+    int major = JDK_VERSION_MAJOR(info.jdk_version); // 主版本号
+    int minor = JDK_VERSION_MINOR(info.jdk_version); // 次版本号
     int micro = JDK_VERSION_MICRO(info.jdk_version);
     int build = JDK_VERSION_BUILD(info.jdk_version);
     if (major == 1 && minor > 4) {

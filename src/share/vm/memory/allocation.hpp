@@ -222,6 +222,7 @@ class _ValueObj {
 };
 
 // Base class for classes that constitute name spaces.
+// 构成名称空间的类的基类
 
 class AllStatic {
  public:
@@ -231,7 +232,7 @@ class AllStatic {
 
 
 //------------------------------Chunk------------------------------------------
-// Linked list of raw memory chunks
+// Linked list of raw memory chunks. 原始内存块的链表
 class Chunk: CHeapObj<mtChunk> {
   friend class VMStructs;
 

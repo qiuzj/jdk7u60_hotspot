@@ -135,7 +135,7 @@
 
 #define LARGEPAGES_BIT (1 << 6)
 ////////////////////////////////////////////////////////////////////////////////
-// global variables
+// global variables. 物理内存大小
 julong os::Linux::_physical_memory = 0;
 
 address   os::Linux::_initial_thread_stack_bottom = NULL;
@@ -149,7 +149,7 @@ int os::Linux::_page_size = -1;
 const int os::Linux::_vm_default_page_size = (8 * K);
 bool os::Linux::_is_floating_stack = false;
 bool os::Linux::_is_NPTL = false;
-bool os::Linux::_supports_fast_thread_cpu_time = false;
+bool os::Linux::_supports_fast_thread_cpu_time = false; // 是否支持Posix快速时钟
 const char * os::Linux::_glibc_version = NULL;
 const char * os::Linux::_libpthread_version = NULL;
 pthread_condattr_t os::Linux::_condattr[1];
@@ -332,13 +332,13 @@ static bool unsafe_chroot_detected = false;
 static const char *unstable_chroot_error = "/proc file system not found.\n"
                      "Java may be unstable running multithreaded in a chroot "
                      "environment on Linux when /proc filesystem is not mounted.";
-
+// 设置处理器数量；初始化proc，打开"/proc/$pid"；设置获得物理内存大小。
 void os::Linux::initialize_system_info() {
-  set_processor_count(sysconf(_SC_NPROCESSORS_CONF));
+  set_processor_count(sysconf(_SC_NPROCESSORS_CONF)); // 设置处理器数量
   if (processor_count() == 1) {
     pid_t pid = os::Linux::gettid();
     char fname[32];
-    jio_snprintf(fname, sizeof(fname), "/proc/%d", pid);
+    jio_snprintf(fname, sizeof(fname), "/proc/%d", pid); // 初始化proc，打开"/proc/$pid"
     FILE *fp = fopen(fname, "r");
     if (fp == NULL) {
       unsafe_chroot_detected = true;
@@ -346,6 +346,7 @@ void os::Linux::initialize_system_info() {
       fclose(fp);
     }
   }
+  // 设置获得物理内存大小，保存到全局变量中
   _physical_memory = (julong)sysconf(_SC_PHYS_PAGES) * (julong)sysconf(_SC_PAGESIZE);
   assert(processor_count() > 0, "linux error");
 }
@@ -1412,19 +1413,21 @@ jlong os::javaTimeMillis() {
 #define CLOCK_MONOTONIC (1)
 #endif
 
+// 系统时钟初始化
 void os::Linux::clock_init() {
   // we do dlopen's in this particular order due to bug in linux
   // dynamical loader (see 6348968) leading to crash on exit
-  void* handle = dlopen("librt.so.1", RTLD_LAZY);
+  // 之所以用以下的顺序执行两次dlopen方法，是因为Linux动态装载器存在Bug，这个Bug会导致在退出时出现崩溃（参见6348968）。
+  void* handle = dlopen("librt.so.1", RTLD_LAZY); // 打开动态链接库librt.so.1
   if (handle == NULL) {
-    handle = dlopen("librt.so", RTLD_LAZY);
+    handle = dlopen("librt.so", RTLD_LAZY); // 打开动态链接库librt.so
   }
 
   if (handle) {
     int (*clock_getres_func)(clockid_t, struct timespec*) =
            (int(*)(clockid_t, struct timespec*))dlsym(handle, "clock_getres");
     int (*clock_gettime_func)(clockid_t, struct timespec*) =
-           (int(*)(clockid_t, struct timespec*))dlsym(handle, "clock_gettime");
+           (int(*)(clockid_t, struct timespec*))dlsym(handle, "clock_gettime"); // 从so库中装载时钟函数clock_gettime
     if (clock_getres_func && clock_gettime_func) {
       // See if monotonic clock is supported by the kernel. Note that some
       // early implementations simply return kernel jiffies (updated every
@@ -1434,15 +1437,23 @@ void os::Linux::clock_init() {
       // 1/HZ. We check if clock_getres() works, but will ignore its reported
       // resolution for now. Hopefully as people move to new kernels, this
       // won't be a problem.
+      /*
+       * 看看内核是否支持单调时钟。
+       * 注意，一些早期的实现只是返回内核的jiffies值(每1/100或1/1000秒更新一次)。
+       * 在纳米时间里使用这样低分辨率的时钟是不好的(尽管单调特性仍然很好)。
+       * 这在新的内核中得到了修正，但是clock_getres()仍然返回1/HZ。
+       * 我们检查clock_getres()是否工作，但是现在将忽略它报告的分辨率。
+       * 希望当人们迁移到新的内核时，这不会成为一个问题。
+       */
       struct timespec res;
       struct timespec tp;
       if (clock_getres_func (CLOCK_MONOTONIC, &res) == 0 &&
           clock_gettime_func(CLOCK_MONOTONIC, &tp)  == 0) {
-        // yes, monotonic clock is supported
-        _clock_gettime = clock_gettime_func;
+        // yes, monotonic clock is supported. 支持单调时钟
+        _clock_gettime = clock_gettime_func; // 将时钟函数clock_gettime保存到全局变量中
         return;
       } else {
-        // close librt if there is no monotonic clock
+        // close librt if there is no monotonic clock. 如果没有单调时钟，则关闭librt
         dlclose(handle);
       }
     }
@@ -1465,6 +1476,7 @@ void os::Linux::clock_init() {
 #define sys_clock_getres(x,y)  ::syscall(SYS_clock_getres, x, y)
 #endif
 
+// 快速线程时钟初始化（快速是什么意思?）
 void os::Linux::fast_thread_clock_init() {
   if (!UseLinuxPosixThreadCPUClocks) {
     return;
@@ -1482,6 +1494,12 @@ void os::Linux::fast_thread_clock_init() {
   // If the fast Posix clocks are supported then the sys_clock_getres()
   // must return at least tp.tv_sec == 0 which means a resolution
   // better than 1 sec. This is extra check for reliability.
+  /*
+   * 如果sys_clock_getres()返回0错误码，那么线程cpu时间切换到使用快速时钟。
+   * 注意，一些内核可能支持当前线程时钟(CLOCK_THREAD_CPUTIME_ID)，但不支持pthread_getcpuclockid()返回的时钟。
+   * 如果支持快速Posix时钟，那么sys_clock_getres()必须至少返回 tp.tv_sec == 0，表示分辨率优于1秒。
+   * 这是对可靠性的额外检查。
+   */
 
   if(pthread_getcpuclockid_func &&
      pthread_getcpuclockid_func(_main_thread, &clockid) == 0 &&
@@ -3893,7 +3911,7 @@ void os::loop_breaker(int attempts) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// thread priority support
+// thread priority support. 线程优先级支持
 
 // Note: Normal Linux applications are run with SCHED_OTHER policy. SCHED_OTHER
 // only supports dynamic priority, static priority must be zero. For real-time
@@ -3901,6 +3919,10 @@ void os::loop_breaker(int attempts) {
 // However, for large multi-threaded applications, SCHED_RR is not only slower
 // than SCHED_OTHER, but also very unstable (my volano tests hang hard 4 out
 // of 5 runs - Sep 2005).
+// 注意：普通的Linux应用程序使用SCHED_OTHER策略运行。
+// SCHED_OTHER只支持动态优先级，静态优先级必须为零。
+// 对于实时应用程序，Linux支持SCHED_RR，它允许静态优先级(1-99)。
+// 然而，对于大型多线程应用程序，SCHED_RR不仅比SCHED_OTHER应用程序慢，而且非常不稳定(我的volano测试在5次运行中有4次很难运行——2005年9月)。
 //
 // The following code actually changes the niceness of kernel-thread/LWP. It
 // has an assumption that setpriority() only modifies one kernel-thread/LWP,
@@ -3908,7 +3930,14 @@ void os::loop_breaker(int attempts) {
 // threads. It has always been the case, but could change in the future. For
 // this reason, the code should not be used as default (ThreadPriorityPolicy=0).
 // It is only used when ThreadPriorityPolicy=1 and requires root privilege.
-
+// 下面的代码实际上改变了内核线程/LWP的良好性。
+// 它假设setpriority()只修改一个内核线程/LWP，而不是整个用户进程，并且用户级线程是1:1映射到内核线程的。
+// 这一直都是这样，但在未来可能会改变。
+// 由于这个原因，代码不应该作为默认值使用(ThreadPriorityPolicy=0)。
+// 它只在ThreadPriorityPolicy=1时使用，并且需要root权限。
+//
+// java线程优先级与操作系统优先级的映射关系. 数组下标代表java优先级，下标对应的元素值代表操作系统的优先级。
+// 例如java的优先级1、5、10分别对应操作系统的优先级4、0、-5。
 int os::java_to_os_priority[CriticalPriority + 1] = {
   19,              // 0 Entry should never be used
 
@@ -3929,23 +3958,27 @@ int os::java_to_os_priority[CriticalPriority + 1] = {
   -5               // 11 CriticalPriority
 };
 
+// 线程优先级初始化
 static int prio_init() {
   if (ThreadPriorityPolicy == 1) {
     // Only root can raise thread priority. Don't allow ThreadPriorityPolicy=1
     // if effective uid is not root. Perhaps, a more elegant way of doing
     // this is to test CAP_SYS_NICE capability, but that will require libcap.so
-    if (geteuid() != 0) {
+    // 只有root用户可以提高线程优先级。
+    // 如果有效的uid不是root用户，则不允许设置ThreadPriorityPolicy=1。
+    // 也许，更优雅的方法是测试CAP_SYS_NICE的能力，但这需要libcap.so。
+    if (geteuid() != 0) { // geteuid()：returns the effective（起作用的） user ID of the calling process
       if (!FLAG_IS_DEFAULT(ThreadPriorityPolicy)) {
         warning("-XX:ThreadPriorityPolicy requires root privilege on Linux");
       }
       ThreadPriorityPolicy = 0;
     }
   }
-  if (UseCriticalJavaThreadPriority) {
+  if (UseCriticalJavaThreadPriority) { // 实际上，java_to_os_priority中10和11下标的值都为-5，那这里有什么意义？
     os::java_to_os_priority[MaxPriority] = os::java_to_os_priority[CriticalPriority];
   }
   return 0;
-}
+} // end of prio_init()
 
 OSReturn os::set_native_priority(Thread* thread, int newpri) {
   if ( !UseThreadPriorities || ThreadPriorityPolicy == 0 ) return OS_OK;
@@ -4067,13 +4100,13 @@ static void SR_handler(int sig, siginfo_t* siginfo, ucontext_t* context) {
   }
 
   errno = old_errno;
-}
+} // end of SR_handler()
 
-
+// 初始化暂停/恢复信号处理程序，保存该信号的当前标志值。
 static int SR_initialize() {
   struct sigaction act;
   char *s;
-  /* Get signal number to use for suspend/resume */
+  /* Get signal number to use for suspend/resume. 获取用于暂停/恢复的信号编号 */
   if ((s = ::getenv("_JAVA_SR_SIGNUM")) != 0) {
     int sig = ::strtol(s, 0, 10);
     if (sig > 0 || sig < _NSIG) {
@@ -4087,7 +4120,7 @@ static int SR_initialize() {
   sigemptyset(&SR_sigset);
   sigaddset(&SR_sigset, SR_signum);
 
-  /* Set up signal handler for suspend/resume */
+  /* Set up signal handler for suspend/resume. 为挂起/恢复设置信号处理程序 */
   act.sa_flags = SA_RESTART|SA_SIGINFO;
   act.sa_handler = (void (*)(int)) SR_handler;
 
@@ -4102,10 +4135,10 @@ static int SR_initialize() {
     return -1;
   }
 
-  // Save signal flag
+  // Save signal flag. 保存信号标志
   os::Linux::set_our_sigflags(SR_signum, act.sa_flags);
   return 0;
-}
+} // end of SR_initialize()
 
 static int SR_finalize() {
   return 0;
@@ -4275,7 +4308,7 @@ void signalHandler(int sig, siginfo_t* info, void* uc) {
 // to JVM_handle_linux_signal, harmlessly.
 bool os::Linux::signal_handlers_are_installed = false;
 
-// For signal-chaining
+// For signal-chaining. 用于信号链
 struct sigaction os::Linux::sigact[MAXSIGNUM];
 unsigned int os::Linux::sigs = 0;
 bool os::Linux::libjsig_is_loaded = false;
@@ -4286,11 +4319,11 @@ struct sigaction* os::Linux::get_chained_signal_action(int sig) {
   struct sigaction *actp = NULL;
 
   if (libjsig_is_loaded) {
-    // Retrieve the old signal handler from libjsig
+    // Retrieve the old signal handler from libjsig. 从libjsig获取旧的信号处理器
     actp = (*get_signal_action)(sig);
   }
   if (actp == NULL) {
-    // Retrieve the preinstalled signal handler from jvm
+    // Retrieve the preinstalled signal handler from jvm. 从jvm获取预先安装的信号处理器
     actp = get_preinstalled_handler(sig);
   }
 
@@ -4299,7 +4332,7 @@ struct sigaction* os::Linux::get_chained_signal_action(int sig) {
 
 static bool call_chained_handler(struct sigaction *actp, int sig,
                                  siginfo_t *siginfo, void *context) {
-  // Call the old signal handler
+  // Call the old signal handler. 调用旧的信号处理器
   if (actp->sa_handler == SIG_DFL) {
     // It's more reasonable to let jvm treat it as an unexpected exception
     // instead of taking the default action.
@@ -4367,7 +4400,7 @@ void os::Linux::save_preinstalled_handler(int sig, struct sigaction& oldAct) {
   sigs |= (unsigned int)1 << sig;
 }
 
-// for diagnostic
+// for diagnostic. 信号集合，数组下标为信号编码，元素值为信号值。用于诊断
 int os::Linux::sigflags[MAXSIGNUM];
 
 int os::Linux::get_our_sigflags(int sig) {
@@ -4706,8 +4739,9 @@ const char* os::exception_name(int exception_code, char* buf, size_t size) {
 }
 
 // this is called _before_ the most of global arguments have been parsed
+// 在大多数全局参数被解析之前调用
 void os::init(void) {
-  char dummy;   /* used to get a guess on initial stack address */
+  char dummy;   /* used to get a guess on initial stack address. 用于猜测初始堆栈地址 */
 //  first_hrtime = gethrtime();
 
   // With LinuxThreads the JavaMain thread pid (primordial thread)
@@ -4716,8 +4750,14 @@ void os::init(void) {
   // via the sun.java.launcher.pid property.
   // Use this property instead of getpid() if it was correctly passed.
   // See bug 6351349.
-  pid_t java_launcher_pid = (pid_t) Arguments::sun_java_launcher_pid();
-
+  /*
+   * 对于LinuxThreads, JavaMain线程的pid(原始线程)不同于java启动线程的pid。
+   * 因此，在Linux上，启动器线程的pid通过sun.java.launcher.pid属性被传递给VM。
+   * 如果能够正确的传递，则使用该属性代替getpid()。
+   * 参见Bug 6351349。
+   */
+  pid_t java_launcher_pid = (pid_t) Arguments::sun_java_launcher_pid(); // launcher的pid
+  // 如果launcher的pid获取不到，则使用getpid()方法获取. https://man7.org/linux/man-pages/man2/getpid.2.html
   _initial_pid = (java_launcher_pid > 0) ? java_launcher_pid : getpid();
 
   clock_tics_per_sec = sysconf(_SC_CLK_TCK);
@@ -4725,19 +4765,20 @@ void os::init(void) {
   init_random(1234567);
 
   ThreadCritical::initialize();
-
+  // 设置页大小
   Linux::set_page_size(sysconf(_SC_PAGESIZE));
   if (Linux::page_size() == -1) {
     fatal(err_msg("os_linux.cpp: os::init: sysconf failed (%s)",
                   strerror(errno)));
   }
   init_page_sizes((size_t) Linux::page_size());
-
+  // 设置处理器数量；初始化proc，打开"/proc/$pid"；设置获得物理内存大小。
   Linux::initialize_system_info();
 
   // main_thread points to the aboriginal thread
-  Linux::_main_thread = pthread_self();
-
+  // 获得原生主线程的句柄：获得指向原生线程的指针，并将其保存在全局变量中
+  Linux::_main_thread = pthread_self(); // https://man7.org/linux/man-pages/man3/pthread_self.3.html
+  // 系统时钟初始化
   Linux::clock_init();
   initial_time_count = os::elapsed_counter();
 
@@ -4780,11 +4821,14 @@ extern "C" {
 }
 
 // this is called _after_ the global arguments have been parsed
+// 在全局参数被解析之后调用
 jint os::init_2(void)
 {
+  // 快速线程时钟初始化
   Linux::fast_thread_clock_init();
 
   // Allocate a single page and mark it as readable for safepoint polling
+  // 分配一个页面并将其标记为可读，以便安全点轮询
   address polling_page = (address) ::mmap(NULL, Linux::page_size(), PROT_READ, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);
   guarantee( polling_page != MAP_FAILED, "os::init_2: failed to allocate polling page" );
 
@@ -4806,14 +4850,17 @@ jint os::init_2(void)
 #endif
   }
 
+  // 配置大页内存
   os::large_page_init();
 
   // initialize suspend/resume support - must do this before signal_sets_init()
+  // 初始化挂起/恢复支持——必须在signal_sets_init()之前完成此操作. SR是suspend/resume的简称吧？
+  // 初始化暂停/恢复信号处理程序，保存该信号的当前标志值。
   if (SR_initialize() != 0) {
     perror("SR_initialize failed");
     return JNI_ERR;
   }
-
+  // 初始化信号集
   Linux::signal_sets_init();
   Linux::install_signal_handlers();
 
@@ -4822,6 +4869,9 @@ jint os::init_2(void)
   // size.  Add a page for compiler2 recursion in main thread.
   // Add in 2*BytesPerWord times page size to account for VM stack during
   // class initialization depending on 32 or 64 bit VM.
+  // 检查线程创建和初始化java系统类时允许的最小堆栈大小，包括StackOverflowError——这取决于页面大小。
+  // 在主线程中为compiler2递归添加一个页面。
+  // 根据32位或64位VM，在类初始化期间添加2*BytesPerWord倍页面大小来分配VM堆栈。
   os::Linux::min_stack_allowed = MAX2(os::Linux::min_stack_allowed,
             (size_t)(StackYellowPages+StackRedPages+StackShadowPages) * Linux::page_size() +
                     (2*BytesPerWord COMPILER2_PRESENT(+1)) * Linux::vm_default_page_size());
@@ -4837,6 +4887,7 @@ jint os::init_2(void)
 
   // Make the stack size a multiple of the page size so that
   // the yellow/red zones can be guarded.
+  // 将堆栈大小设置为页面大小的几倍，以便可以保护黄色/红色区域。
   JavaThread::set_stack_size_at_create(round_to(threadStackSizeInBytes,
         vm_page_size()));
 
@@ -4889,6 +4940,7 @@ jint os::init_2(void)
   if (MaxFDLimit) {
     // set the number of file descriptors to max. print out error
     // if getrlimit/setrlimit fails but continue regardless.
+    // 将文件描述符的数量设置为最大。如果getrlimit/setrlimit失败则打印错误，然后继续下一步流程。
     struct rlimit nbr_files;
     int status = getrlimit(RLIMIT_NOFILE, &nbr_files);
     if (status != 0) {
@@ -4905,6 +4957,7 @@ jint os::init_2(void)
   }
 
   // Initialize lock used to serialize thread creation (see os::create_thread)
+  // 初始化用于序列化线程创建的锁（参见os::create_thread）
   Linux::set_createThread_lock(new Mutex(Mutex::leaf, "createThread_lock", false));
 
   // at-exit methods are called in the reverse order of their registration.
@@ -4926,11 +4979,11 @@ jint os::init_2(void)
     }
   }
 
-  // initialize thread priority policy
+  // initialize thread priority policy. 初始化线程优先策略
   prio_init();
 
   return JNI_OK;
-}
+} // end of os::init_2(void)
 
 // this is called at the end of vm_initialization
 void os::init_3(void)

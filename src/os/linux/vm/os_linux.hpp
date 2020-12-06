@@ -70,7 +70,7 @@ class Linux {
   static julong _physical_memory;
   static pthread_t _main_thread;
   static Mutex* _createThread_lock;
-  static int _page_size;
+  static int _page_size; // 页大小
   static const int _vm_default_page_size;
 
   static julong available_memory();

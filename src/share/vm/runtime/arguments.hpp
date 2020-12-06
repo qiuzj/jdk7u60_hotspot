@@ -44,13 +44,14 @@ extern "C" {
 class SysClassPath;
 
 // Element describing System and User (-Dkey=value flags) defined property.
+// 系统属性类：描述系统和用户(-Dkey=value标志)定义的属性
 
 class SystemProperty: public CHeapObj<mtInternal> {
  private:
-  char*           _key;
-  char*           _value;
-  SystemProperty* _next;
-  bool            _writeable;
+  char*           _key; // 键
+  char*           _value; // 值
+  SystemProperty* _next; // 指向下一个属性的指针
+  bool            _writeable; // 是否可写
   bool writeable()   { return _writeable; }
 
  public:
@@ -96,7 +97,7 @@ class SystemProperty: public CHeapObj<mtInternal> {
     }
   }
 
-  // Constructor
+  // Constructor. 属性构造器，代表一个属性的键值对
   SystemProperty(const char* key, const char* value, bool writeable) {
     if (key == NULL) {
       _key = NULL;
@@ -113,7 +114,7 @@ class SystemProperty: public CHeapObj<mtInternal> {
     _next = NULL;
     _writeable = writeable;
   }
-};
+}; // end of class SystemProperty
 
 
 // For use by -agentlib, -agentpath and -Xrun
@@ -232,7 +233,7 @@ class Arguments : AllStatic {
   // string containing all java command (class/jarfile name and app args)
   static char* _java_command;
 
-  // Property list
+  // Property list. 系统属性列表
   static SystemProperty* _system_properties;
 
   // Quick accessor to System properties in the list:
@@ -549,6 +550,6 @@ class Arguments : AllStatic {
 
   // Utility: copies src into buf, replacing "%%" with "%" and "%p" with pid.
   static bool copy_expand_pid(const char* src, size_t srclen, char* buf, size_t buflen);
-};
+}; // end of class Arguments
 
 #endif // SHARE_VM_RUNTIME_ARGUMENTS_HPP

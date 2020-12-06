@@ -163,7 +163,7 @@ inline int os::closedir(DIR *dirp) {
   return ::closedir(dirp);
 }
 
-// macros for restartable system calls
+// macros for restartable system calls. 用于"可重新启动的系统调用"的宏
 
 #define RESTARTABLE(_cmd, _result) do { \
     _result = _cmd; \

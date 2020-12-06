@@ -3265,28 +3265,31 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
 
   extern void JDK_Version_init();
 
-  // Check version
+  // Check version. 检查版本号
   if (!is_supported_jni_version(args->version)) return JNI_EVERSION;
 
-  // Initialize the output stream module
+  // Initialize the output stream module. 1.初始化输出流模块
   ostream_init();
 
-  // Process java launcher properties.
+  // Process java launcher properties. 2.配置Launcher属性
   Arguments::process_sun_java_launcher_properties(args);
 
-  // Initialize the os module before using TLS
+  // Initialize the os module before using TLS. 3.初始化OS模块
   os::init();
 
-  // Initialize system properties.
+  // Initialize system properties. 4.配置系统属性
   Arguments::init_system_properties();
 
+  // 5.程序参数和虚拟机选项解析
   // So that JDK version can be used as a discrimintor when parsing arguments
+  // JDK版本初始化，以便JDK版本在解析参数时可以作为一个鉴别器
   JDK_Version_init();
 
   // Update/Initialize System properties after JDK version number is known
+  // 在确定JDK版本号后，更新/初始化系统属性
   Arguments::init_version_specific_system_properties();
 
-  // Parse arguments
+  // Parse arguments. 解析参数
   jint parse_result = Arguments::parse(args);
   if (parse_result != JNI_OK) return parse_result;
 
@@ -3300,14 +3303,15 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
   HOTSPOT_VM_INIT_BEGIN();
 #endif /* USDT2 */
 
-  // Record VM creation timing statistics
+  // Record VM creation timing statistics. 记录VM创建时间统计信息
   TraceVmCreationTime create_vm_timer;
-  create_vm_timer.start();
+  create_vm_timer.start(); // 时间统计开始
 
   // Timing (must come after argument parsing)
   TraceTime timer("Create VM", TraceStartupTime);
 
-  // Initialize the os module after parsing the args
+  // Initialize the os module after parsing the args. 解析参数后初始化os模块
+  // 6.根据传入的参数继续初始化操作系统模块
   jint os_init_2_result = os::init_2();
   if (os_init_2_result != JNI_OK) return os_init_2_result;
 
@@ -3319,9 +3323,10 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
   // of bootstrapping, VM is currently running in single-thread mode.
   MemTracker::bootstrap_single_thread();
 
-  // Initialize output stream logging
+  // Initialize output stream logging. 7.配置GC日志输出流模块
   ostream_init_log();
 
+  // 8.加载代理(agent)库
   // Convert -Xrun to -agentlib: if there is no JVM_OnLoad
   // Must be before create_vm_init_agents()
   if (Arguments::init_libraries_at_startup()) {
@@ -3333,14 +3338,17 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
     create_vm_init_agents();
   }
 
-  // Initialize Threads state
+  // 9.初始化线程队列
+  // Initialize Threads state. 初始化线程状态
   _thread_list = NULL;
   _number_of_threads = 0;
   _number_of_non_daemon_threads = 0;
 
   // Initialize global data structures and create system classes in heap
+  // 10.初始化全局数据结构，并在堆中创建系统类
   vm_init_globals();
 
+  // 11.创建主线程并加入线程队列
   // Attach the main thread to this os thread. 将主线程连接到这个os线程
   JavaThread* main_thread = new JavaThread();
   main_thread->set_thread_state(_thread_in_vm); // 主线程在虚拟机中运行
@@ -3350,7 +3358,7 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
   // stacksize. This adjusted size is what is used to figure the placement
   // of the guard pages.
   main_thread->record_stack_base_and_size();
-  main_thread->initialize_thread_local_storage();
+  main_thread->initialize_thread_local_storage(); // 12.初始化TLS模块
 
   main_thread->set_active_handles(JNIHandleBlock::allocate_block());
 
@@ -3366,10 +3374,11 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
   // crash Linux VM, see notes in os_linux.cpp.
   main_thread->create_stack_guard_pages();
 
-  // Initialize Java-Level synchronization subsystem
+  // Initialize Java-Level synchronization subsystem. 初始化java级别的同步子系统
   ObjectMonitor::Initialize() ;
 
   // Second phase of bootstrapping, VM is about entering multi-thread mode
+  // bootstrapping的第二个阶段，VM进入多线程模式
   MemTracker::bootstrap_multi_thread();
 
   // Initialize global modules

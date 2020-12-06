@@ -63,7 +63,7 @@ int     Arguments::_num_jvm_flags               = 0;
 char**  Arguments::_jvm_args_array              = NULL;
 int     Arguments::_num_jvm_args                = 0;
 char*  Arguments::_java_command                 = NULL;
-SystemProperty* Arguments::_system_properties   = NULL;
+SystemProperty* Arguments::_system_properties   = NULL; // 系统属性列表
 const char*  Arguments::_gc_log_filename        = NULL;
 bool   Arguments::_has_profile                  = false;
 bool   Arguments::_has_alloc_profile            = false;
@@ -142,7 +142,7 @@ void Arguments::process_sun_java_launcher_properties(JavaVMInitArgs* args) {
   }
 }
 
-// Initialize system properties key and value.
+// Initialize system properties key and value. 初始化系统属性键和值
 void Arguments::init_system_properties() {
 
   PropertyList_add(&_system_properties, new SystemProperty("java.vm.specification.name",
@@ -163,7 +163,7 @@ void Arguments::init_system_properties() {
 
   _java_class_path = new SystemProperty("java.class.path", "",  true);
 
-  // Add to System Property list.
+  // Add to System Property list. 添加到系统属性列表。
   PropertyList_add(&_system_properties, _java_ext_dirs);
   PropertyList_add(&_system_properties, _java_endorsed_dirs);
   PropertyList_add(&_system_properties, _sun_boot_library_path);
@@ -172,9 +172,9 @@ void Arguments::init_system_properties() {
   PropertyList_add(&_system_properties, _java_class_path);
   PropertyList_add(&_system_properties, _sun_boot_class_path);
 
-  // Set OS specific system properties values
+  // Set OS specific system properties values. 设置操作系统特定的系统属性值
   os::init_system_properties_values();
-}
+} // end of Arguments::init_system_properties()
 
 
   // Update/Initialize System properties after JDK version number is known
@@ -3393,17 +3393,19 @@ char* Arguments::PropertyList_get_value_at(SystemProperty* pl, int index) {
   return ret_val;
 }
 
+// 将新属性new_p添加到属性表plist中，内部实现使用链表实现，其实就是将新属性添加到链尾
 void Arguments::PropertyList_add(SystemProperty** plist, SystemProperty *new_p) {
   SystemProperty* p = *plist;
   if (p == NULL) {
-    *plist = new_p;
+    *plist = new_p; // 如果属性表为空，作为属性表的链头
   } else {
+    // 找到链尾
     while (p->next() != NULL) {
       p = p->next();
     }
-    p->set_next(new_p);
+    p->set_next(new_p); // 如果属性表不为空，则添加到链尾
   }
-}
+} // end of Arguments::PropertyList_add
 
 void Arguments::PropertyList_add(SystemProperty** plist, const char* k, char* v) {
   if (plist == NULL)

@@ -61,7 +61,7 @@ template<class E> class GrowableArray;
 
 // %%%%% Moved ThreadState, START_FN, OSThread to new osThread.hpp. -- Rose
 
-// Platform-independent error return values from OS functions
+// Platform-independent error return values from OS functions. 平台无关的操作系统函数的错误返回值
 enum OSReturn {
   OS_OK         =  0,        // Operation was successful
   OS_ERR        = -1,        // Operation failed
@@ -71,14 +71,15 @@ enum OSReturn {
   OS_NORESOURCE = -6         // Operation failed for lack of nonmemory resource
 };
 
+// Java的线程优先级定义
 enum ThreadPriority {        // JLS 20.20.1-3
-  NoPriority       = -1,     // Initial non-priority value
-  MinPriority      =  1,     // Minimum priority
-  NormPriority     =  5,     // Normal (non-daemon) priority
-  NearMaxPriority  =  9,     // High priority, used for VMThread
-  MaxPriority      = 10,     // Highest priority, used for WatcherThread
-                             // ensures that VMThread doesn't starve profiler
-  CriticalPriority = 11      // Critical thread priority
+  NoPriority       = -1,     // Initial non-priority value. 初始化非优先级值，不存在该优先级
+  MinPriority      =  1,     // Minimum priority. 最小优先级为1
+  NormPriority     =  5,     // Normal (non-daemon) priority. 普通的优先级为5（非守护线程）
+  NearMaxPriority  =  9,     // High priority, used for VMThread. 高优先级为9，用于虚拟机线程VMThread
+  MaxPriority      = 10,     // Highest priority, used for WatcherThread. 最大的优先级为10，用于WatcherThread
+                             // ensures that VMThread doesn't starve profiler. 确保VMThread不会使分析器饿死
+  CriticalPriority = 11      // Critical thread priority. 关键线程的优先级为11
 };
 
 // Executable parameter flag for os::commit_memory() and
@@ -136,14 +137,14 @@ class os: AllStatic {
 
 
  public:
-  static void init(void);                      // Called before command line parsing
-  static jint init_2(void);                    // Called after command line parsing
-  static void init_globals(void) {             // Called from init_globals() in init.cpp
+  static void init(void);                      // Called before command line parsing. 在命令行解析之前调用
+  static jint init_2(void);                    // Called after command line parsing. 在命令行解析之后调用
+  static void init_globals(void) {             // Called from init_globals() in init.cpp. 在init.cpp中被init_globals()调用
     init_globals_ext();
   }
-  static void init_3(void);                    // Called at the end of vm init
+  static void init_3(void);                    // Called at the end of vm init. 在VM初始化结束时调用
 
-  // File names are case-insensitive on windows only
+  // File names are case-insensitive on windows only. 文件名只在windows上不区分大小写
   // Override me as needed
   static int    file_name_strcmp(const char* s1, const char* s2);
 
@@ -156,7 +157,7 @@ class os: AllStatic {
   static void   run_periodic_checks();
 
 
-  // Returns the elapsed time in seconds since the vm started.
+  // Returns the elapsed time in seconds since the vm started. 返回虚拟机启动以来运行的时间(秒)。
   static double elapsedTime();
 
   // Returns real time in seconds since an arbitrary point
@@ -165,7 +166,7 @@ class os: AllStatic {
                            double* process_user_time,
                            double* process_system_time);
 
-  // Interface to the performance counter
+  // Interface to the performance counter. 性能计数器接口
   static jlong elapsed_counter();
   static jlong elapsed_frequency();
 
