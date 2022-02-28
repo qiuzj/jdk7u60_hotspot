@@ -62,10 +62,10 @@ class ParCompactionManager;
 class oopDesc {
   friend class VMStructs;
  private:
-  // 对象头的mark word？
+  // 存储对象运行时记录信息，如哈希码、GC分代年龄、锁状态标志、线程持有的锁、偏向线程ID、偏向时间戳等
   volatile markOop  _mark; // 线程状态、并发锁、GC分代信息等内部标识
   // 类元数据，指向方法区中类的结构信息，即类的元数据信息。
-  union _metadata { // 实际上，是一个指向instanceKlass的指针
+  union _metadata { // 元数据指针。实际上，是一个指向instanceKlass的指针
     wideKlassOop    _klass; // 宽指针. 未压缩的oop指针
     narrowOop       _compressed_klass; // 压缩指针. 压缩后的oop指针，节省空间.
   } _metadata;
