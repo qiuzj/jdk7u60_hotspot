@@ -616,7 +616,7 @@ JavaMain(void * _args)
     }
 
     /* Invoke main method. */
-    // 4.传递应用程序参数并执行主方法
+    // 4.传递应用程序参数并执行Java应用程序的主方法
     (*env)->CallStaticVoidMethod(env, mainClass, mainID, mainArgs);
 
     /*
