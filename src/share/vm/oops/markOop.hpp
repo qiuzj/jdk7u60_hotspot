@@ -100,7 +100,7 @@
 class BasicLock;
 class ObjectMonitor;
 class JavaThread;
-
+// 描述对象头
 class markOopDesc: public oopDesc {
  private:
   // Conversion

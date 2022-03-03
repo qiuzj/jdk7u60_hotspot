@@ -41,21 +41,21 @@ typedef void* OopOrNarrowOopStar;
 // 普通对象指针oop定义，统一去掉了Desc后缀，简化了名称。
 #ifndef CHECK_UNHANDLED_OOPS
 
-typedef class oopDesc*                            oop;
-typedef class   instanceOopDesc*            instanceOop;
-typedef class   methodOopDesc*                    methodOop;
-typedef class   constMethodOopDesc*            constMethodOop;
-typedef class   methodDataOopDesc*            methodDataOop;
-typedef class   arrayOopDesc*                    arrayOop;
-typedef class     objArrayOopDesc*            objArrayOop;
-typedef class     typeArrayOopDesc*            typeArrayOop;
-typedef class   constantPoolOopDesc*            constantPoolOop;
-typedef class   constantPoolCacheOopDesc*   constantPoolCacheOop;
-typedef class   klassOopDesc*                    klassOop;
-typedef class   markOopDesc*                    markOop;
+typedef class oopDesc*                            oop; // 所有oop的顶级父类
+typedef class   instanceOopDesc*            instanceOop; // 表示Java类实例
+typedef class   methodOopDesc*                    methodOop; // 表示Java方法
+typedef class   constMethodOopDesc*            constMethodOop; // 表示Java方法中的只读信息（其实就是字节码指令）
+typedef class   methodDataOopDesc*            methodDataOop; // 表示性能统计的相关数据
+typedef class   arrayOopDesc*                    arrayOop; // 数组对象
+typedef class     objArrayOopDesc*            objArrayOop; // 表示引用类型数组对象
+typedef class     typeArrayOopDesc*            typeArrayOop; // 表示基本类型数组对象
+typedef class   constantPoolOopDesc*            constantPoolOop; // 表示Java字节码文件中的常量池
+typedef class   constantPoolCacheOopDesc*   constantPoolCacheOop; // 与constantPoolOop相伴生，是后者的缓存对象
+typedef class   klassOopDesc*                    klassOop; // 指向JVM内部的klass实例的对象
+typedef class   markOopDesc*                    markOop; // oop的标记对象
 typedef class   compiledICHolderOopDesc*    compiledICHolderOop;
 
-#else
+#else // When CHECK_UNHANDLED_OOPS is defined
 
 
 // When CHECK_UNHANDLED_OOPS is defined, an "oop" is a class with a
@@ -176,22 +176,22 @@ DEF_OOP(compiledICHolder);
 // klass层次结构与oop层次结构是分开的。
 // Klass表示类的class信息，即Java类元数据在方法区中的表示。
 
-class Klass;
-class   instanceKlass;
-class     instanceMirrorKlass;
-class     instanceRefKlass;
-class   methodKlass;
-class   constMethodKlass;
+class Klass; // klass家族的基类
+class   instanceKlass; // 虚拟机层面与Java类对等的数据结构。假设有Java类ClassA，那么instanceKlass就是ClassA这个类类型结构的对等体
+class     instanceMirrorKlass; // 描述java.lang.Class的实例
+class     instanceRefKlass; // 描述java.lang.ref.Reference的子类
+class   methodKlass; // 表示Java类的方法
+class   constMethodKlass; // 描述Java类方法所对应的字节码指令信息的固有属性
 class   methodDataKlass;
-class   klassKlass;
+class   klassKlass; // klass链路的末端
 class     instanceKlassKlass;
 class     arrayKlassKlass;
 class       objArrayKlassKlass;
 class       typeArrayKlassKlass;
-class   arrayKlass;
-class     objArrayKlass;
-class     typeArrayKlass;
-class   constantPoolKlass;
+class   arrayKlass; // 描述Java数组的信息，是个抽象基类
+class     objArrayKlass; // 描述Java中引用类型数组的数据结构
+class     typeArrayKlass; // 描述Java中基本类型数组的数据结构
+class   constantPoolKlass; // 描述Java字节码文件中的常量池的数据结构
 class   constantPoolCacheKlass;
 class   compiledICHolderKlass;
 
