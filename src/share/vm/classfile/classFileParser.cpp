@@ -3005,13 +3005,13 @@ instanceKlassHandle ClassFileParser::parseClassFile(Symbol* name,
   _class_name = (name != NULL) ? name : vmSymbols::unknown_class_name();
 
   cfs->guarantee_more(8, CHECK_(nullHandle));  // magic, major, minor
-  // Magic value
+  // Magic value. 魔数
   u4 magic = cfs->get_u4_fast();
   guarantee_property(magic == JAVA_CLASSFILE_MAGIC,
                      "Incompatible magic value %u in class file %s",
                      magic, CHECK_(nullHandle));
 
-  // Version numbers
+  // Version numbers. 次版本号、主版本号
   u2 minor_version = cfs->get_u2_fast();
   u2 major_version = cfs->get_u2_fast();
 
@@ -3045,7 +3045,7 @@ instanceKlassHandle ClassFileParser::parseClassFile(Symbol* name,
   // Do not restrict it to jdk1.0 or jdk1.1 to maintain backward compatibility (4982376)
   _relax_verify = Verifier::relax_verify_for(class_loader());
 
-  // Constant pool
+  // Constant pool. 常量池
   constantPoolHandle cp = parse_constant_pool(class_loader, CHECK_(nullHandle));
   ConstantPoolCleaner error_handler(cp); // set constant pool to be cleaned up.
 
@@ -3053,7 +3053,7 @@ instanceKlassHandle ClassFileParser::parseClassFile(Symbol* name,
 
   cfs->guarantee_more(8, CHECK_(nullHandle));  // flags, this_class, super_class, infs_len
 
-  // Access flags
+  // Access flags. 访问标识
   AccessFlags access_flags;
   jint flags = cfs->get_u2_fast() & JVM_RECOGNIZED_CLASS_MODIFIERS;
 
@@ -3066,13 +3066,13 @@ instanceKlassHandle ClassFileParser::parseClassFile(Symbol* name,
 
   // This class and superclass
   instanceKlassHandle super_klass;
-  u2 this_class_index = cfs->get_u2_fast();
+  u2 this_class_index = cfs->get_u2_fast(); // 当前类索引
   check_property(
     valid_cp_range(this_class_index, cp_size) &&
       cp->tag_at(this_class_index).is_unresolved_klass(),
     "Invalid this class index %u in constant pool in class file %s",
     this_class_index, CHECK_(nullHandle));
-
+  // 根据类索引在常量池项中找到当前类的全限定名
   Symbol*  class_name  = cp->unresolved_klass_at(this_class_index);
   assert(class_name != NULL, "class_name can't be null");
 
@@ -3118,7 +3118,7 @@ instanceKlassHandle ClassFileParser::parseClassFile(Symbol* name,
       if (cfs->source() != NULL) tty->print(" from %s", cfs->source());
       tty->print_cr("]");
     }
-
+    // 父类索引
     u2 super_class_index = cfs->get_u2_fast();
     if (super_class_index == 0) {
       check_property(class_name == vmSymbols::java_lang_Object(),
@@ -3135,6 +3135,7 @@ instanceKlassHandle ClassFileParser::parseClassFile(Symbol* name,
       // However, make sure it is not an array type.
       bool is_array = false;
       if (cp->tag_at(super_class_index).is_klass()) {
+        // 根据类索引在常量池项中找到父类的全限定名和父类句柄
         super_klass = instanceKlassHandle(THREAD, cp->resolved_klass_at(super_class_index));
         if (_need_verify)
           is_array = super_klass->oop_is_array();
@@ -3147,7 +3148,7 @@ instanceKlassHandle ClassFileParser::parseClassFile(Symbol* name,
       }
     }
 
-    // Interfaces
+    // Interfaces. 接口
     u2 itfs_len = cfs->get_u2_fast();
     objArrayHandle local_interfaces;
     if (itfs_len == 0) {
@@ -3157,13 +3158,13 @@ instanceKlassHandle ClassFileParser::parseClassFile(Symbol* name,
     }
 
     u2 java_fields_count = 0;
-    // Fields (offsets are filled in later)
+    // Fields (offsets are filled in later). 字段
     FieldAllocationCount fac;
     objArrayHandle fields_annotations;
     typeArrayHandle fields = parse_fields(class_name, cp, access_flags.is_interface(), &fac, &fields_annotations,
                                           &java_fields_count,
                                           CHECK_(nullHandle));
-    // Methods
+    // Methods. 方法
     bool has_final_method = false;
     AccessFlags promoted_flags;
     promoted_flags.set_flags(0);
@@ -3184,7 +3185,7 @@ instanceKlassHandle ClassFileParser::parseClassFile(Symbol* name,
     objArrayHandle methods_parameter_annotations(THREAD, methods_parameter_annotations_oop);
     objArrayHandle methods_default_annotations(THREAD, methods_default_annotations_oop);
 
-    // Additional attributes
+    // Additional attributes. 属性
     ClassAnnotationCollector parsed_annotations;
     parse_classfile_attributes(cp, &parsed_annotations, CHECK_(nullHandle));
 
